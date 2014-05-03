@@ -1,0 +1,12 @@
+# mount point	fstype	device			[device2]   fstype2
+
+/boot		emmc	/dev/block/mmcblk0p12
+/recovery		emmc	/dev/block/mmcblk0p11
+/system		ext4	/dev/block/mmcblk0p16
+/cache		ext4	/dev/block/mmcblk0p17
+/cust		ext4	/dev/block/mmcblk0p18	flags=display="Custom Storage";storage;wipeingui;backup=1
+/data		ext4	/dev/block/mmcblk0p19	 length=-8192	flags=wipeingui;storage;backup=1
+#/sdcard		ext4	/data/share	flags=display="Internal SD";storage;wipeingui;backup=1
+/external_sd	vfat	/dev/block/mmcblk1p1	/dev/block/mmcblk1  flags=display="External(Micro) SD Card";storage;wipeingui;removable
+
+

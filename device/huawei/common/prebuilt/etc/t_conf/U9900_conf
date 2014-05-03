@@ -1,0 +1,38 @@
+enable      		1
+
+[thermal_manager1]
+enable          	1
+sampling			10
+clod_zone_sensor	ap_sensor
+hot_zone_sensor		nct203_sensor
+cold_zone_temp		-9999
+hot_zone_temp		-9999         60				65
+hot_zone_temp_clr	-9999         58				63
+cpu			1508000       1200000			        800000		
+gpu			480000        240000			        120000
+
+
+[thermal_manager2]
+enable      		1
+sampling			5
+clod_zone_sensor	ap_sensor
+hot_zone_sensor		nct203_sensor
+cold_zone_temp		50
+hot_zone_temp		-9999         70			     73
+hot_zone_temp_clr	-9999         68                             71
+cpu			1200000       800000			     0
+gpu			120000        120000			     0
+	
+[thermal_manager3]
+enable      		0
+sampling			0
+clod_zone_sensor	null
+hot_zone_sensor		k3v2_temp
+cold_zone_temp		0
+hot_zone_temp		0
+hot_zone_temp_clr	0
+cpu					0
+gpu					0
+
+
+

@@ -1,0 +1,32 @@
+#audioloop parameters
+#############################
+[HSMIC_HS]
+MAIN_MIC_PGA <0~14>=0
+HEADSET_LEFT_PGA <0~32>=28
+HEADSET_RIGHT_PGA <0~32>=28
+MAINMIC_BOOST <0~1>=0
+#############################
+[HSMIC_EAR]
+MAIN_MIC_PGA <0~14>=6
+EARPIECE_PGA <0~32>=28
+MAINMIC_BOOST <0~1>=0
+PLAYBACK_PGA <0~108>=72
+#############################
+[HSMIC_SPK]
+MAIN_MIC_PGA <0~14>=6
+LINEOUT_LEFT_PGA <0~32>=28
+LINEOUT_RIGHT_PGA <0~32>=28
+MAINMIC_BOOST <0~1>=0
+#############################
+[MAINMIC_HS]
+MAIN_MIC_PGA <0~14>=6
+HEADSET_LEFT_PGA <0~32>=28
+HEADSET_RIGHT_PGA <0~32>=28
+MAINMIC_BOOST <0~1>=0
+#############################
+[SUBMIC_HS]
+SUB_MIC_PGA <0~14>=6
+HEADSET_LEFT_PGA <0~32>=28
+HEADSET_RIGHT_PGA <0~32>=28
+SUBMIC_BOOST <0~1>=0
+#############################

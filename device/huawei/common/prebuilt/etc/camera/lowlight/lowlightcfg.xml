@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="GB2312"?>
+<Config>
+    <Sensor Name="sonyimx134">
+        <Normal>
+            <AlgoCoffs>
+                0 0 8 0 256 -1 -1 1 0 384 3 1
+            </AlgoCoffs>
+        </Normal>
+        <LowLight_1>
+            <SpotInNormal Threshold="218" Ratio="0.15" AverageY="55" />
+            <SpotInLowLight Threshold="232" Ratio="0.20" AverageY="80" />
+            <ThresholdInNormal ISO="2550" AverageY="35" FPS="13" />
+            <ThresholdInLowLight ISO="1000" AverageY="100" FPS="17" />
+            <AlgoCoffs>
+                0 0 8 0 128 -1 -1 1 0 512 3 1
+            </AlgoCoffs>
+        </LowLight_1>
+    </Sensor>
+
+    <Sensor Name="sonyimx135">
+        <Normal>
+            <AlgoCoffs>
+                0 0 8 0 256 -1 -1 1 0 384 3 1
+            </AlgoCoffs>
+        </Normal>
+        <LowLight_1>
+            <SpotInNormal Threshold="222" Ratio="0.4" AverageY="55" />
+            <SpotInLowLight Threshold="232" Ratio="0.55" AverageY="80" />
+            <ThresholdInNormal ISO="1500" AverageY="35" FPS="13" />
+            <ThresholdInLowLight ISO="1000" AverageY="100" FPS="17" />
+            <AlgoCoffs>
+                0 0 8 0 512 -1 -1 1 0 512 3 1
+            </AlgoCoffs>
+        </LowLight_1>
+    </Sensor>
+</Config>

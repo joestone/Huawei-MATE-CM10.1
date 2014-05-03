@@ -1,0 +1,11 @@
+# mount point	fstype	device			[device2]   fstype2
+
+/boot		emmc		/dev/block/platform/hi_mci.1/by-name/boot
+/misc		emmc		/dev/block/platform/hi_mci.1/by-name/misc
+/system		ext4		/dev/block/platform/hi_mci.1/by-name/system	
+/data		ext4		/dev/block/platform/hi_mci.1/by-name/userdata	 length=-16384
+/cache		ext4		/dev/block/platform/hi_mci.1/by-name/cache
+/recovery	emmc		/dev/block/platform/hi_mci.1/by-name/recovery
+/cust		ext4		/dev/block/platform/hi_mci.1/by-name/cust	flags=display="Custom Storage";wipeingui;backup=1
+/external_sd	vfat		/dev/block/platform/hi_mci.0/mmcblk1p1	/dev/block/mmcblk1  flags=display="External Storage";storage;wipeingui;removable
+

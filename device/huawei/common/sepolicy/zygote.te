@@ -1,0 +1,2 @@
+# zygote talks to init
+unix_socket_connect(zygote, property, init);

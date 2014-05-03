@@ -1,0 +1,108 @@
+on early-init
+    start ueventd
+    start healthd
+
+on init
+    export PATH /sbin
+	export LD_LIBRARY_PATH .:/sbin
+    export ANDROID_ROOT /system
+    export ANDROID_DATA /data
+    export EXTERNAL_STORAGE /external_sd
+
+# Always start adbd on userdebug and eng builds
+write /sys/class/android_usb/android0/enable 0
+write /sys/class/android_usb/android0/idVendor 12d1
+write /sys/class/android_usb/android0/idProduct 1038
+write /sys/class/android_usb/android0/f_mass_storage/cdrom_index none
+write /sys/class/android_usb/android0/f_mass_storage/nluns 2
+write /sys/class/android_usb/android0/functions mass_storage,adb	
+	
+# Right now vendor lives on the same filesystem as system,
+# but someday that may change.
+    symlink /system/vendor /vendor
+    mkdir /sdcard
+    mkdir /external_sd
+    mkdir /system
+    mkdir /data
+    mkdir /cust
+    chown system system /dev/cpuctl
+    chown system system /dev/cpuctl/tasks
+    mkdir /cache
+    mkdir /boot
+    mkdir /recovery
+
+    symlink /system/etc /etc
+
+    write /sys/module/block2mtd/parameters/block2mtd /dev/block/mmcblk0p3
+    mount /tmp /tmp tmpfs
+    # change nve device visit permission
+    wait /dev/nve0
+    chmod 0777 /dev/nve0
+    chmod 0664 /sys/module/usbcore/parameters/autosuspend
+    chown radio radio /sys/module/usbcore/parameters/autosuspend
+    write /sys/module/usbcore/parameters/autosuspend 2000
+
+on fs
+
+    /dev/ttyUSB1   0777   root  root
+    /dev/ttyUSB0   0777   root  root
+    /dev/ttyACM0   0777   root  root
+    /dev/ttyACM1   0777   root  root
+    /dev/ttyACM2   0777   root  root
+    /dev/ttyACM3   0777   root  root
+
+    write /sys/devices/system/cpu/cpufreq/k3hotplug/cpu_lock 2
+#bq2416x_charger
+     chmod 0660 /sys/bus/i2c/devices/1-006b/enable_charger
+     chown system system /sys/bus/i2c/devices/1-006b/enable_charger
+     chown system system /sys/class/leds/synaptics-backlight-tk/brightness
+     chmod 0660 /sys/class/leds/synaptics-backlight-tk/brightness
+     
+on boot
+
+    ifup lo
+    hostname localhost
+    domainname localdomain
+
+    write /sys/devices/system/cpu/cpu1/online 0
+    write /sys/devices/platform/ipps-v2.0/mcu "I 64"
+    write /sys/devices/platform/ipps-v2.0/mcu "I 112"
+    write /sys/devices/platform/ipps-v2.0/mcu "I 17"
+    write /sys/devices/platform/ipps-v2.0/mcu "I 49"
+    
+    class_start default
+
+on property:sys.powerctl=*
+   powerctl ${sys.powerctl}
+   
+service ueventd /sbin/ueventd
+    critical
+
+#service healthd /sbin/healthd -n
+#    critical
+
+service check /sbin/check
+    oneshot
+
+service charger /sbin/chargeservice
+    disabled
+
+service recovery /sbin/recovery
+    disabled
+
+service adbd /sbin/adbd recovery
+    disabled
+
+# start adbd
+on property:ro.debuggable=1
+    write /sys/class/android_usb/android0/enable 1  	
+    start adbd
+    setprop service.adb.root 1
+
+# Restart adbd so it can run as root
+on property:service.adb.root=1
+    write /sys/class/android_usb/android0/enable 0
+    restart adbd
+    write /sys/class/android_usb/android0/enable 1
+	
+	

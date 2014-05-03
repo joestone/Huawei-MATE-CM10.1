@@ -1,0 +1,39 @@
+#
+# Touchscreen driver configuration
+#
+menuconfig INPUT_TOUCHSCREEN
+	bool "Touchscreens"
+	help
+	  Say Y here, and a list of supported touchscreens will be displayed.
+	  This option doesn't affect the kernel.
+
+	  If unsure, say Y.
+
+if INPUT_TOUCHSCREEN
+
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI
+	tristate "Synaptics i2c touchscreen"
+	depends on I2C
+	help
+	  This enables support for Synaptics RMI over I2C based touchscreens.
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI_CHAR_DEV
+	tristate "Synaptics I2C touchscreen char device"
+	depends on TOUCHSCREEN_SYNAPTICS_I2C_RMI
+	help
+	  This enables support for character device channel for Synaptics RMI
+	  touchscreens.
+
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI_F54
+	tristate "Synaptics I2C touchscreen f54"
+	depends on TOUCHSCREEN_SYNAPTICS_I2C_RMI
+	help
+	  This enables support for function 54 for Synaptics RMI touchscreens.
+
+config TOUCHSCREEN_SYNAPTICS_I2C_RMI_FW_UPDATE
+	tristate "Synaptics I2C touchscreen firmware update"
+	depends on TOUCHSCREEN_SYNAPTICS_I2C_RMI
+	help
+	  This enables support for in-system firmware update for Synaptics RMI
+	  touchscreens.
+
+endif
