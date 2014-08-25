@@ -42,6 +42,8 @@ write /sys/class/android_usb/android0/functions mass_storage,adb
     chown radio radio /sys/module/usbcore/parameters/autosuspend
     write /sys/module/usbcore/parameters/autosuspend 2000
 
+	start chargeled
+	
 on fs
 
     /dev/ttyUSB1   0777   root  root
@@ -86,6 +88,9 @@ service check /sbin/check
 
 service charger /sbin/chargeservice
     disabled
+	
+service chargeled /sbin/chargeleds
+    disabled	
 
 service recovery /sbin/recovery
     disabled

@@ -93,8 +93,8 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
     frameworks/native/data/etc/handheld_core_hardware.xml:system/etc/permissions/handheld_core_hardware.xml
 
-PRODUCT_AAPT_CONFIG := normal hdpi xhdpi xxhdpi
-PRODUCT_AAPT_PREF_CONFIG := xhdpi
+PRODUCT_AAPT_CONFIG := normal hdpi
+PRODUCT_AAPT_PREF_CONFIG := hdpi
 
 PRODUCT_LOCALES += en_US
 
@@ -307,6 +307,7 @@ PRODUCT_COPY_FILES += \
     device/huawei/common/prebuilt/etc/ril_xgold_radio.cfg:/system/etc/ril_xgold_radio.cfg \
     device/huawei/common/prebuilt/etc/vold.fstab:system/etc/vold.fstab \
     device/huawei/common/prebuilt/etc/audio_policy.conf:system/etc/audio_policy.conf \
+    device/huawei/common/prebuilt/etc/dolby_config.xml:system/etc/dolby_config.xml \
     device/huawei/common/prebuilt/etc/media_codecs.xml:system/etc/media_codecs.xml \
     device/huawei/common/prebuilt/etc/media_profiles.xml:system/etc/media_profiles.xml \
     device/huawei/common/prebuilt/etc/asound_ADL.dat:system/etc/asound_ADL.dat
@@ -413,9 +414,11 @@ PRODUCT_COPY_FILES += \
     device/huawei/common/prebuilt/usr/idc/screenovate_keyboard.idc:system/usr/idc/screenovate_keyboard.idc \
     device/huawei/common/prebuilt/usr/idc/synaptics.idc:system/usr/idc/synaptics.idc \
     device/huawei/common/prebuilt/usr/idc/screenovate_mouse.idc:system/usr/idc/screenovate_mouse.idc \
+    device/huawei/common/prebuilt/usr/keylayout/Button_Jack.kl:system/usr/keylayout/Button_Jack.kl \
     device/huawei/common/prebuilt/usr/keylayout/k3_keypad.kl:system/usr/keylayout/k3_keypad.kl \
     device/huawei/common/prebuilt/usr/keylayout/screenovate_keyboard.kl:system/usr/keylayout/screenovate_keyboard.kl \
     device/huawei/common/prebuilt/usr/keychars/screenovate_keyboard.kcm:system/usr/keychars/screenovate_keyboard.kcm
+
 
 
 # This device have enough room for precise davick
@@ -496,8 +499,8 @@ PRODUCT_PROPERTY_OVERRIDES := \
 	ro.config.fm_type=libbcmfm_if \
 
 # Enable switch storage 
-PRODUCT_COPY_FILES += \
-    device/huawei/common/prebuilt/etc/init.d/preparesd:/system/etc/init.d/preparesd
+#PRODUCT_COPY_FILES += \
+#    device/huawei/common/prebuilt/etc/init.d/preparesd:/system/etc/init.d/preparesd
 
 # OpenGL ES
 PRODUCT_PROPERTY_OVERRIDES += \
@@ -516,6 +519,23 @@ $(call inherit-product, build/target/product/full.mk)
 
 # call dalvik heap config
 $(call inherit-product-if-exists, frameworks/native/build/phone-xhdpi-1024-dalvik-heap.mk)
+
+#add macro to enable command type lcd
+export USE_LCD_CMI_OTM1282B := true 
+#add macro to enable command type TP&TK
+export USE_TP_TK_MATE := true
+#NOTICE! Do not config PRODUCT_DEVICE
+export USE_NFC_DEVICE := true
+export USE_NFC_DEVICE_U9900 := true
+export USE_MULTITASK_FLOAT := true 
+PRODUCT_LCD_DISPLAY=HD 
+
+#### Goo Manager support
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.goo.developerid=joestone \
+    ro.goo.board=hwmt1_u06 \
+	ro.goo.rom=CM10_1_Ascend_Mate \
+	ro.goo.version=$(shell date +%Y%m%d )
 
 #PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
 PRODUCT_NAME := cm_hwmt1_u06

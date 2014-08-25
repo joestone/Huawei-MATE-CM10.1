@@ -70,7 +70,7 @@ TARGET_KERNEL_CONFIG := mate_defconfig
 
 # Camera
 USE_CAMERA_STUB := false
-COMMON_GLOBAL_CFLAGS += -DMR0_CAMERA_BLOB -DUSE_TP_TK_MATE
+COMMON_GLOBAL_CFLAGS += -DMR0_CAMERA_BLOB -DUSE_TP_TK_MATE -DUSE_LCD_CMI_OTM1282B
 
 #COMMON_GLOBAL_CFLAGS += -DQCOM_BSP_CAMERA_ABI_HACK
 
@@ -114,6 +114,8 @@ TARGET_PROVIDES_INIT_RC := true
 ADDITIONAL_DEFAULT_PROPERTIES += persist.service.adb.enable=1
 ADDITIONAL_DEFAULT_PROPERTIES += persist.sys.usb.config=mtp
 
+#Odexed
+WITH_DEXPREOPT := false
 
 # USB mass storage
 BOARD_UMS_LUNFILE := "/sys/class/android_usb/android0/f_mass_storage/lun/file"
