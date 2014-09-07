@@ -840,6 +840,20 @@ bool get_pmu_out26m_enable(void)
     return true;
 }
 
+int get_mate_new_lcd_type(void)
+{
+	unsigned int type = 0;
+
+	bool ret = get_hw_config_int("mate_lcd_type/type", &type, NULL);
+	HW_CONFIG_DEBUG("hsad: mate_new_lcd_type = %d, ret = %d\n", type, ret);
+	if (ret == true) {
+		return (int)type;
+	}
+
+	return -1;
+}
+
+
 int get_nfc_module(void)
 {
         unsigned int type = 0;

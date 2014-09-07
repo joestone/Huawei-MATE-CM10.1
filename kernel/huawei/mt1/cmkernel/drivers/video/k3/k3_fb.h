@@ -135,17 +135,18 @@
 
 /* FRC: using hw vsync */
 #define K3_FB_FRC_NORMAL_FPS	60
-#define K3_FB_FRC_IDLE_FPS		45
-#define K3_FB_FRC_VIDEO_FPS		45
+#define K3_FB_FRC_IDLE_FPS		30
+#define K3_FB_FRC_VIDEO_FPS		60
 #define K3_FB_FRC_WEBKIT_FPS	45
-#define K3_FB_FRC_BENCHMARK_FPS	60
+#define K3_FB_FRC_BENCHMARK_FPS	67
 #define K3_FB_FRC_GAME_FPS		45
-#define K3_FB_FRC_SPECIAL_GAME_FPS	60
+#define K3_FB_FRC_SPECIAL_GAME_FPS  60
 #define K3_FB_FRC_GAME_30_FPS           30
+
 
 /* SBL */
 #define SBL_BKL_STEP	5
-#define SBL_REDUCE_VALUE(x)	((x) * 80 / 100)
+#define SBL_REDUCE_VALUE(x)     ((x) * 80 / 100)
 #endif
 
 /* FRC threshold */

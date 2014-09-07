@@ -2654,6 +2654,8 @@ static int __init rmi4_f54_module_init(void)
 	return 0;
 }
 
+
+
 static void __exit rmi4_f54_module_exit(void)
 {
 	init_completion(&remove_complete);

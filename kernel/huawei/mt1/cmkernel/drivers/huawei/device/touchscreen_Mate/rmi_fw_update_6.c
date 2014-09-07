@@ -1401,6 +1401,8 @@ static int __init rmi4_fw_update_module_init(void)
 	return 0;
 }
 
+
+
 static void __exit rmi4_fw_update_module_exit(void)
 {
 	init_completion(&remove_complete);

@@ -52,7 +52,7 @@ $(obj)/ipps_para.h: $(src)/ipps_para_gen.pl $(src)/ipps_para_FHD.xls
 	$(PERL) -s $^ $@
 endif
 
-ifdef CONFIG_LCD_JDI_OTM1282B
+ifdef CONFIG_LCD_CMI_OTM1282B
 $(obj)/ipps_para.h: $(src)/ipps_para_gen.pl $(src)/ipps_para_U9900.xls
 	$(PERL) -s $^ $@
 else

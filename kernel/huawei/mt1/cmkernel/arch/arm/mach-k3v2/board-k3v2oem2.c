@@ -159,7 +159,7 @@ static struct cyttsp4_loader_platform_data _cyttsp4_loader_platform_data = {
 	.fw = &cyttsp4_firmware,
 	.param_regs = &cyttsp4_sett_param_regs,
 	.param_size = &cyttsp4_sett_param_size,
-	.flags = 1,
+	.flags = 0,
 };
 
 
@@ -230,13 +230,33 @@ static struct cyttsp4_loader_platform_data _cyttsp4_loader_platform_data = {
 #include <linux/ti_wilink_st.h>
 //#define	REGULATOR_DEV_BLUETOOTH_NAME	"bt-io"    
 
-#ifdef CONFIG_EXTRAL_DYNAMIC_DCDC
+/* for framebuffer */
+#ifdef CONFIG_EXTRAL_DYNAMIC_DCDC    
 #include <mach/extral_dynamic_dcdc.h>
-#endif
+#endif                               
+
+#define GPIO_LCD_RESET  (003)
+#define GPIO_LCD_POWER  (171)
+#define GPIO_LCD_ID0	(151)
+#define GPIO_LCD_ID1	(152)
+#define GPIO_LCD_TE (072)
+#define GPIO_PWM0   (142)
+#define GPIO_PWM1   (143)
+
+#define GPIO_LCD_POWER_NAME "gpio_lcd_power"
+#define GPIO_LCD_RESET_NAME "gpio_lcd_reset"
+#define GPIO_LCD_ID0_NAME "gpio_lcd_id0"
+#define GPIO_LCD_ID1_NAME "gpio_lcd_id1"
+#define GPIO_LCD_TE_NAME "gpio_lcd_te"
+#define GPIO_PWM0_NAME   "gpio_pwm0"
+#define GPIO_PWM1_NAME   "gpio_pwm1"
+#define REG_BASE_PWM0_NAME  "reg_base_pwm0"
+#define REGULATOR_DEV_LCD_NAME  "k3_dev_lcd"
+#define REGULATOR_DEV_EDC_NAME  "k3_dev_edc"
 
 #define NFC_NAME "pn544"
 
-/* for framebuffer */
+#if 0
 #ifdef CONFIG_LCD_TOSHIBA_MDW70
 #define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDW70_V001"
 #elif  defined(CONFIG_LCD_PANASONIC_VVX10F002A00)
@@ -251,15 +271,36 @@ static struct cyttsp4_loader_platform_data _cyttsp4_loader_platform_data = {
 #define PLATFORM_DEVICE_LCD_NAME "mipi_sharp_LS035B3SX"
 #elif defined(CONFIG_LCD_JDI_OTM1282B)
 #define PLATFORM_DEVICE_LCD_NAME "mipi_jdi_OTM1282B"
+#elif defined(CONFIG_P2_LCD_CMD_FEATURE)
+#define PLATFORM_DEVICE_LCD_NAME "mipi_jdi_OTM1282B"
+
 #elif defined(CONFIG_LCD_CMI_PT045TN07)
 #define PLATFORM_DEVICE_LCD_NAME "mipi_cmi_PT045TN07"
-#elif defined(CONFIG_LCD_TOSHIBA_MDY90)
-#define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDY90"
-#elif defined(CONFIG_LCD_K3_FAKE)
-#define PLATFORM_DEVICE_LCD_NAME "lcd_k3_fake_fb"
 #else
 #error "PLATFORM_DEVICE_LCD_NAME not defined"
 #endif
+#endif
+/*
+#define PLATFORM_DEVICE_LCD_NAME "ldi_samsung_LMS350DF04"
+#define PLATFORM_DEVICE_LCD_NAME "mipi_samsung_S6E39A"
+#define PLATFORM_DEVICE_LCD_NAME "mipi_sharp_LS035B3SX"
+#define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDW70"
+*/
+
+#ifdef CONFIG_P2_LCD_CMD_FEATURE
+
+#define PLATFORM_DEVICE_LCD_NAME "mipi_jdi_OTM1282B"
+
+#elif defined(CONFIG_LCD_CMI_OTM1282B_CMD)
+
+#define PLATFORM_DEVICE_LCD_NAME "mipi_cmi_OTM1282B"
+
+#else
+
+#define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDY90"
+
+#endif
+
 /* Begin: Added by d59977 for BCM GPS */
 #define GPIO_GPS_BCM_EN    (GPIO_18_7)
 #define GPIO_GPS_BCM_RET   (GPIO_19_0)
@@ -2326,7 +2367,7 @@ static void k3v2_i2c_devices_init(void)
 	    if(product_fullname("CEDGED") || product_fullname("UEDGE") || product_fullname("UEDGE_G")){
 		    bus_id = 0;
 		}else{
-		    bus_id = 3;
+		    bus_id = 0;//3
 		}
 	    i2c_register_board_info(bus_id, hisik3_i2c_bus0_tfa9887,
 					    ARRAY_SIZE(hisik3_i2c_bus0_tfa9887));

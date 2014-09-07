@@ -372,6 +372,29 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -fno-delete-null-pointer-checks
 
+ifeq ($(USE_LCD_JDI_OTM1282B),true) 
+      KBUILD_CFLAGS += -DCONFIG_P2_LCD_CMD_FEATURE 
+else
+	ifeq ($(USE_LCD_CMI_OTM1282B),true) 
+	      KBUILD_CFLAGS += -DCONFIG_LCD_CMI_OTM1282B_CMD 
+	else
+              KBUILD_CFLAGS += -DCONFIG_LCD_1080P
+        endif
+endif 
+ifeq ($(USE_TP_TK_U9700L),true) 
+      KBUILD_CFLAGS += -DCONFIG_P2_TP_TK_CMD_FEATURE 
+else
+	ifeq ($(USE_TP_TK_MATE),true) 
+	      KBUILD_CFLAGS += -DCONFIG_MATE_TP_TK_CMD_FEATURE 
+	else
+	      KBUILD_CFLAGS += -DCONFIG_D2_TP_TK_CMD_FEATURE 
+	endif 
+endif 
+
+ifeq ($(USE_WIFIDISPLAY_NO),true)
+      KBUILD_CFLAGS += -DCONFIG__USE_WIFI_DISPLAY_NO
+endif
+
 ifeq ($(USE_MATE_CAMERA_SETTINGS),true)
       KBUILD_CFLAGS += -DUSE_MATE_CAMERA_SETTINGS
 endif

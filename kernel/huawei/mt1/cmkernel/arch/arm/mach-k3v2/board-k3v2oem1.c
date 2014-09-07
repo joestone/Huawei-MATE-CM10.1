@@ -103,11 +103,53 @@
 #include <linux/skbuff.h>
 #include <linux/ti_wilink_st.h>
 //#define	REGULATOR_DEV_BLUETOOTH_NAME	"bt-io"    
+#define GPIO_LCD_RESET  (003)
+#define GPIO_LCD_POWER  (171)
+#define GPIO_LCD_ID0	(151)
+#define GPIO_LCD_ID1	(152)
+#define GPIO_LCD_TE (072)
+#define GPIO_PWM0   (142)
+#define GPIO_PWM1   (143)
 
 /* for framebuffer */
 #define TOUCH_INT_PIN  GPIO_19_5  /*GPIO_157*/
 #define TOUCH_RESET_PIN GPIO_19_4
 #define SYNA_NAME "rmi_i2c"
+
+#define GPIO_LCD_POWER_NAME "gpio_lcd_power"
+#define GPIO_LCD_RESET_NAME "gpio_lcd_reset"
+#define GPIO_LCD_ID0_NAME "gpio_lcd_id0"
+#define GPIO_LCD_ID1_NAME "gpio_lcd_id1"
+#define GPIO_LCD_TE_NAME "gpio_lcd_te"
+#define GPIO_PWM0_NAME   "gpio_pwm0"
+#define GPIO_PWM1_NAME   "gpio_pwm1"
+#define REG_BASE_PWM0_NAME  "reg_base_pwm0"
+#define REGULATOR_DEV_LCD_NAME  "k3_dev_lcd"
+#define REGULATOR_DEV_EDC_NAME  "k3_dev_edc"
+
+/*
+#define PLATFORM_DEVICE_LCD_NAME "ldi_samsung_LMS350DF04"
+#define PLATFORM_DEVICE_LCD_NAME "mipi_samsung_S6E39A"
+#define PLATFORM_DEVICE_LCD_NAME "mipi_sharp_LS035B3SX"
+#define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDW70"
+*/
+
+#ifdef CONFIG_P2_LCD_CMD_FEATURE
+
+#define PLATFORM_DEVICE_LCD_NAME "mipi_jdi_OTM1282B"
+
+#elif defined(CONFIG_LCD_CMI_OTM1282B_CMD)
+
+#define PLATFORM_DEVICE_LCD_NAME "mipi_cmi_OTM1282B"
+
+#else
+
+#define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDY90"
+
+#endif
+
+#if 0
+
 #ifdef CONFIG_LCD_TOSHIBA_MDW70
 #define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDW70_V001"
 #elif  defined(CONFIG_LCD_PANASONIC_VVX10F002A00)
@@ -124,12 +166,13 @@
 #define PLATFORM_DEVICE_LCD_NAME "mipi_cmi_PT045TN07"
 #elif defined(CONFIG_LCD_JDI_OTM1282B)
 #define PLATFORM_DEVICE_LCD_NAME "mipi_jdi_OTM1282B"
-#elif defined(CONFIG_LCD_TOSHIBA_MDY90)
-#define PLATFORM_DEVICE_LCD_NAME "mipi_toshiba_MDY90"
-#elif defined(CONFIG_LCD_K3_FAKE)
-#define PLATFORM_DEVICE_LCD_NAME "lcd_k3_fake_fb"
+#elif defined(CONFIG_P2_LCD_CMD_FEATURE)
+#define PLATFORM_DEVICE_LCD_NAME "mipi_jdi_OTM1282B"
+
 #else
 #error "PLATFORM_DEVICE_LCD_NAME not defined"
+#endif
+
 #endif
 
 /* Begin: Added by d59977 for BCM GPS */
@@ -376,12 +419,65 @@ static struct platform_device hisik3_hi6421_irq_device = {
 	.resource       =  hi6421_irq_resources,
 };
 
+static struct resource k3_lcd_resources[] = {
+	[0] = {
+		.name = GPIO_LCD_RESET_NAME,
+		.start = GPIO_LCD_RESET,
+		.end = GPIO_LCD_RESET,
+		.flags = IORESOURCE_IO,
+	},
+	[1] = {
+		.name = GPIO_LCD_POWER_NAME,
+		.start = GPIO_LCD_POWER,
+		.end = GPIO_LCD_POWER,
+		.flags = IORESOURCE_IO,
+	},
+	[2] = {
+		.name = GPIO_LCD_ID0_NAME,
+		.start = GPIO_LCD_ID0,
+		.end = GPIO_LCD_ID0,
+		.flags = IORESOURCE_IO,
+	},
+	[3] = {
+		.name = GPIO_LCD_ID1_NAME,
+		.start = GPIO_LCD_ID1,
+		.end = GPIO_LCD_ID1,
+		.flags = IORESOURCE_IO,
+	},
+	[4] = {
+		.name = GPIO_PWM0_NAME,
+		.start = GPIO_PWM0,
+		.end = GPIO_PWM0,
+		.flags = IORESOURCE_IO,
+	}, 
+	[5] = {
+		.name = GPIO_PWM1_NAME,
+		.start = GPIO_PWM1,
+		.end = GPIO_PWM1,
+		.flags = IORESOURCE_IO,
+	}, 
+	[6] = {
+		.name = REG_BASE_PWM0_NAME,
+		.start = REG_BASE_PWM0,
+		.end = REG_BASE_PWM0 + REG_PWM0_IOSIZE-1,
+		.flags = IORESOURCE_MEM,
+	},  
+	[7] = {
+		.name = GPIO_LCD_TE_NAME,
+		.start = GPIO_LCD_TE,
+		.end = GPIO_LCD_TE,
+		.flags = IORESOURCE_IO,
+	},  
+};
+
 static struct platform_device k3_lcd_device = {
 	.name = PLATFORM_DEVICE_LCD_NAME,
 	.id	= 1,
 	.dev = {
-		.init_name = "k3_dev_lcd",
+		.init_name = REGULATOR_DEV_LCD_NAME,
 	},
+	.num_resources = ARRAY_SIZE(k3_lcd_resources),
+	.resource = k3_lcd_resources,
 };
 
 //usb switch C9800 default configuration

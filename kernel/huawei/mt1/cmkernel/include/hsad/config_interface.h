@@ -185,6 +185,7 @@ extern int get_secondary_sensor_flip_type(void);
 extern int check_suspensory_camera(char *cname);
 extern int get_camera_focus_key(void);
 extern int get_u9700_ldo_ctrl(void);
+extern int get_mate_new_lcd_type(void);
 extern bool get_pmu_out26m_enable(void);
 extern int get_nfc_module(void);
 extern int get_nfc_product(void);

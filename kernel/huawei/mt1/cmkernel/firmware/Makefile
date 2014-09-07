@@ -146,7 +146,7 @@ fw-shipped-$(CONFIG_TOUCHSCREEN_RMI4_SYNAPTICS_GENERIC) += rmi4/TM2451-001.img \
 							   rmi4/TM2429-001.img \
 							   rmi4/TM2561-001.img \
 							   rmi4/BLL/TM2450-000.img
-fw-shipped-y += cyttsp4_fw.bin
+fw-shipped-$(CONFIG_TOUCHSCREEN_CYPRESS_CYTTSP4) += cyttsp4_fw.bin
 fw-shipped-all := $(fw-shipped-y) $(fw-shipped-m) $(fw-shipped-)
 
 # Directories which we _might_ need to create, so we have a rule for them.

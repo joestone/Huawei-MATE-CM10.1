@@ -36,7 +36,7 @@ __BEGIN_DECLS
 
 extern int capget(cap_user_header_t hdrp, cap_user_data_t datap);
 extern int capset(cap_user_header_t hdrp, const cap_user_data_t datap);
-#define XATTR_NAME_CAPS "security.capability"
+
 __END_DECLS
 
 #endif /* _BIONIC_SYS_CAPABILITY_H */

@@ -21,8 +21,8 @@
 PRODUCT_COPY_FILES += \
   $(call find-copy-subdir-files,*,vendor/huawei/hwmt1_u06/proprietary,system)
 
-PRODUCT_COPY_FILES += \
-  $(call find-copy-subdir-files,*,vendor/huawei/hwmt1_u06/proprietary/lib,obj/lib)
+#PRODUCT_COPY_FILES += \
+#  $(call find-copy-subdir-files,*,vendor/huawei/hwmt1_u06/proprietary/lib,obj/lib)
 
 #PRODUCT_COPY_FILES += \
 #  $(call find-copy-subdir-files,*,vendor/huawei/hwmt1_u06/proprietary/lib/hw,obj/lib)

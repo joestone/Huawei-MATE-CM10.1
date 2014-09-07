@@ -42,30 +42,19 @@
 #include "mipi_dsi.h"
 #include "mipi_reg.h"
 #include <linux/lcd_tuning.h>
-#include <hsad/config_interface.h>
+#include <linux/rmi.h>
 
-#include <hsad/config_interface.h>
-	/*add begin: just for the case that LCD&TP share the ldo*/
-#ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-#include "../../../huawei/device/touchkey/tp_tk_regulator.h"
-#endif
+/**********************open or close the glove function**********************/
+//extern struct rmi_function_container *rmi_fc;
+//extern int rmi_f01_glove_switch_read(struct rmi_function_container *fc);
+/**********************open or close the glove function**********************/
 
-#define PWM_LEVEL 100
-	/*add end: just for the case that LCD&TP share the ldo*/
 
-static bool jdi_tk_enable;
-extern u8 g_k3fb_in_suspend;
-extern u8 g_k3fb_in_resume;
-
-/*----------------Power ON Sequence(sleep mode to Normal mode)---------------------*/
-
+/*******************************************************************************
+** Power ON Sequence(sleep mode to Normal mode)
+*/
 static char soft_reset[] = {
 	0x01,
-};
-
-static char bl_level_0[] = {
-	0x51,
-	0x00,
 };
 
 static char bl_level[] = {
@@ -75,19 +64,13 @@ static char bl_level[] = {
 
 static char bl_enable[] = {
 	0x53,
-	0x2C,
-};
-
-static char bl_mode[] = {
-	0x55,
-	0x01,
+	0x24,
 };
 
 static char te_enable[] = {
 	0x35,
 	0x00,
 };
-
 
 static char exit_sleep[] = {
 	0x11,
@@ -105,6 +88,9 @@ static char display_on[] = {
 	0x29,
 };
 
+/*******************************************************************************
+** Power OFF Sequence(Normal to power off)
+*/
 static char display_off[] = {
 	0x28,
 };
@@ -113,29 +99,25 @@ static char enter_sleep[] = {
 	0x10,
 };
 
-static char get_chip_id[] = {
-	0xDA,
+static char orise_shift_0x00[] = {
+	0x00,
+	0x00,
+};
+
+static char orise_sheift_0x80[] = {
+	0x00,
+	0x80, 
 };
 
 /*enable orise mode*/
-static char enable_orise_mode1[] = {
+static char enable_orise_command1[] = {
 	0xFF,
-	0x12, 0x82,0x01,
+	0x12, 0x82, 0x01,
 };
 
-static char enable_orise_mode2[] = {
-	0x00,
-	0x80, 
-};
-
-static char enable_orise_mode3[] = {
+static char enable_orise_command2[] = {
 	0xFF,
-	0x12, 0x82, 
-};
-
-static char enable_orise_mode4[] = {
-	0x00,
-	0x80, 
+	0x12, 0x82,
 };
 
 /*Disable per-charge*/
@@ -143,7 +125,6 @@ static char disable_per_charge [] = {
 	0xA5,
 	0x0C, 0x04, 0x01, 
 };
-
 
 /* Set VGL*/
 static char set_vgl1[] = {
@@ -153,113 +134,15 @@ static char set_vgl1[] = {
 
 static char set_vgl2[] = {
 	0xC5,
-	0x92, 0xD6,0xAF,0xAF,0x82,0x88,0x44,0x44,0x40,0x88,
+	0x92, 0xD6, 0xAF, 0xAF, 0x82,
+	0x88, 0x44, 0x44, 0x40, 0x88,
 };
 
 /* Delay TE*/
 static char Delay_TE[] = {
 	0x44,
-	0x00, 0x80,
+	0x01, 0x40,
 };
-
-
-static char  P_DRV_M1[] = {
-	0x00,
-	0xB3,
-};
-
-static char P_DRV_M2[] = {
-	0xC0,
-	0x33,
-};
-
-static char bl_PWM_CTRL1[] = {
-	0x00,
-	0xB0,
-};
-
-static char bl_PWM_CTRL2[] = {
-	0xCA,
-	0x02,0x02,0x5F,0x50,
-};
-
-static char bl_enable_noDimming[] = {
-	0x53,
-	0x24,
-};
-
-static char bl_PWM_CTRL3[] = {
-	0xCA,
-	0xE3,0xE3,0x5F,0x50,
-};
-
-static char orise_shift_0xb4[] = {
-    0x00,
-    0xb4,
-};
-
-static char display_address[] = {
-    0xc0,
-    0x10,
-};
-
-//#define RGV_INV_ENABLE
-
-#ifdef RGV_INV_ENABLE
-//RGB ·­×ªÉèÖÃ
-static char Gen_write_RGB_INV_ON1[] = {
-	0xff,
-	0x12,
-	0x82,
-	0x01,
-};
-
-static char Gen_write_RGB_INV_ON2[] = {
-	0x00,
-	0x80,
-};
-
-static char Gen_write_RGB_INV_ON3[] = {
-	0xff,
-	0x12,
-	0x82,
-};
-
-static char RGB_INV0[] = {
-	0x00,
-	0xB3,
-};
-
-static char RGB_INV1[] = {
-	0xC0,
-	0x66,
-};
-
-static char Gen_write_RGB_INV_OFF1[] = {
-	0x00,
-	0x80,
-};
-
-static char Gen_write_RGB_INV_OFF2[] = {
-	0xff,
-	0x00,
-	0x00,
-};
-
-static char Gen_write_RGB_INV_OFF3[] = {
-	0x00,
-	0x00,
-};
-
-static char Gen_write_RGB_INV_OFF4[] = {
-	0xff,
-	0x00,
-	0x00,
-	0x00,
-};
-
-
-#endif
 
 /*----------------CABC Base Sequence---------------------*/
 static char enable_orise_mode5[] = {
@@ -294,7 +177,6 @@ static char CABC_disable_setting[] = {
 	0x00,
 };
 
-/*----------------CABC UI Sequence---------------------*/
 static char CABC_UI_MODE[] = {
 	0x55,
 	0x91,
@@ -312,7 +194,7 @@ static char CABC_UI_curve_setting[] = {
 	0x88, 0x88, 0x87, 0x88, 0x87,
 	0x88, 0x87, 0x78,
 };
-/*----------------CABC STILL Sequence---------------------*/
+
 static char CABC_STILL_MODE[] = {
 	0x55,
 	0x92,
@@ -330,7 +212,7 @@ static char CABC_STILL_curve_setting[] = {
 	0x88, 0x78, 0x87, 0x78, 0x77,
 	0x77, 0x77, 0x77,
 };
-/*----------------CABC VID Sequence---------------------*/
+
 static char CABC_VID_MODE[] = {
 	0x55,
 	0x93,
@@ -348,264 +230,11 @@ static char CABC_VID_curve_setting[] = {
 	0x77, 0x77, 0x77, 0x77, 0x77,
 	0x77, 0x77, 0x56,
 };
-/*----------------CE Sequence---------------------*/
-static char CE_medium_on[] = {
+
+
+static char ce_medium_on[] = {
 	0x55,
 	0x90,
-};
-
-static char enable_orise_mode7[] = {
-	0x00,
-	0xa0,
-};
-
-static char CE_param1[] = {
-	0xd6,
-	0x01,0x00,0x01,0x00,0x01,
-	0x33,0x01,0x5a,0x01,0x80,
-	0x01,0x5a,
-};
-
-static char enable_orise_mode8[] = {
-	0x00,
-	0xb0,
-};
-
-static char CE_param2[] = {
-	0xd6,
-	0x01,0x26,0x01,0x5a,0x01,
-	0x80,0x01,0x5a,0x01,0x26,
-	0x01,0x4d,
-};
-
-static char enable_orise_mode9[] = {
-	0x00,
-	0xc0,
-};
-
-static char CE_param3[] = {
-	0xd6, 
-	0x55,0x11,0x00,0x22,0x11,
-	0x3c,0x55,0x11,0x3c,0x1a,
-	0x11,0x3c,
-};
-
-static char enable_orise_mode10[] = {
-	0x00,
-	0xd0,
-};
-
-static char CE_param4[] = {
-	0xd6,
-	0x55,0x11,0x3c,0x1a,0x11,
-	0x33,
-};
-
-static char enable_orise_mode11[] = {
-	0x00,
-	0xe0,
-};
-
-static char CE_param5[] = {
-	0xd6,
-	0x2b,0x11,0x1a,0x11,0x11,
-	0x1e,0x2b,0x11,0x1e,0x0d,
-	0x11,0x1e,
-};
-
-static char enable_orise_mode12[] = {
-	0x00,
-	0xf0,
-};
-
-static char CE_param6[] = {
-	0xd6,
-	0x2b,0x11,0x1e,0x0d,0x11,
-	0x1a,
-};
-
-static char enable_orise_mode14[] = {
-	0x00, 0x00,
-};
-
-static char GVDD_setting[] = {
-	0xd8,
-	0x38, 0x38,
-};
-
-static char gamma22_Rp_setting[] = {
-	0xe1,
-	0x01,0x24,0x2d,0x3b,0x45,
-	0x4c,0x5a,0x6c,0x78,0x88,
-	0x93,0x9a,0x60,0x5b,0x56,
-	0x4c,0x3c,0x2f,0x25,0x22,
-	0x19,0x16,0x13,0x0F,
-};
-
-static char gamma22_Rn_setting[] = {
-	0xe2,
-	0x01,0x24,0x2d,0x3b,0x45,
-	0x4c,0x5a,0x6c,0x78,0x88,
-	0x93,0x9a,0x60,0x5b,0x56,
-	0x4c,0x3c,0x2f,0x25,0x22,
-	0x19,0x16,0x13,0x0F,
-};
-
-static char gamma22_Gp_setting[] = {
-	0xe3,
-	0x01,0x24,0x2d,0x3b,0x45,
-	0x4c,0x5a,0x6c,0x78,0x88,
-	0x93,0x9a,0x60,0x5b,0x56,
-	0x4c,0x3c,0x2f,0x25,0x22,
-	0x19,0x16,0x13,0x0F,
-};
-
-static char gamma22_Gn_setting[] = {
-	0xe4,
-	0x01,0x24,0x2d,0x3b,0x45,
-	0x4c,0x5a,0x6c,0x78,0x88,
-	0x93,0x9a,0x60,0x5b,0x56,
-	0x4c,0x3c,0x2f,0x25,0x22,
-	0x19,0x16,0x13,0x0F,
-};
-
-static char gamma22_Bp_setting[] = {
-	0xe5,
-	0x01,0x24,0x2d,0x3b,0x45,
-	0x4c,0x5a,0x6c,0x78,0x88,
-	0x93,0x9a,0x60,0x5b,0x56,
-	0x4c,0x3c,0x2f,0x25,0x22,
-	0x19,0x16,0x13,0x0F,
-};
-
-static char gamma22_Bn_setting[] = {
-	0xe6,
-	0x01,0x24,0x2d,0x3b,0x45,
-	0x4c,0x5a,0x6c,0x78,0x88,
-	0x93,0x9a,0x60,0x5b,0x56,
-	0x4c,0x3c,0x2f,0x25,0x22,
-	0x19,0x16,0x13,0x0F,
-};
-
-static char gamma23_Rp_setting[] = {
-	0xe1,
-    0x78,0x79,0x7b,0x7d,0x7f,
-    0x81,0x86,0x8f,0x92,0x9a,
-    0x9f,0xa3,0x5a,0x56,0x53,
-    0x4a,0x3c,0x2f,0x25,0x22,
-    0x19,0x16,0x13,0x0F,
-};
-
-static char gamma23_Rn_setting[] = {
-	0xe2,
-    0x78,0x79,0x7b,0x7d,0x7f,
-    0x81,0x86,0x8f,0x92,0x9a,
-    0x9f,0xa3,0x5a,0x56,0x53,
-    0x4a,0x3c,0x2f,0x25,0x22,
-    0x19,0x16,0x13,0x0F,    
-};
-
-static char gamma23_Gp_setting[] = {
-	0xe3,
-    0x64,0x66,0x68,0x6a,0x6f,
-    0x74,0x7a,0x85,0x8a,0x95,
-    0x9c,0xa1,0x5c,0x59,0x56,
-    0x4c,0x3c,0x33,0x2a,0x25,
-    0x22,0x16,0x13,0x0F,
-};
-
-static char gamma23_Gn_setting[] = {
-	0xe4,
-    0x64,0x66,0x68,0x6a,0x6f,
-    0x74,0x7a,0x85,0x8a,0x95,
-    0x9c,0xa1,0x5c,0x59,0x56,
-    0x4c,0x3c,0x33,0x2a,0x25,
-    0x22,0x16,0x13,0x0F,
-};
-
-static char gamma23_Bp_setting[] = {
-	0xe5,
-    0x01,0x24,0x2d,0x3b,0x45,
-    0x4c,0x5a,0x6c,0x78,0x88,
-    0x93,0x9a,0x60,0x5b,0x56,
-    0x4c,0x3c,0x2f,0x25,0x22,
-    0x19,0x16,0x13,0x0F,
-};
-
-static char gamma23_Bn_setting[] = {
-	0xe6,
-    0x01,0x24,0x2d,0x3b,0x45,
-    0x4c,0x5a,0x6c,0x78,0x88,
-    0x93,0x9a,0x60,0x5b,0x56,
-    0x4c,0x3c,0x2f,0x25,0x22,
-    0x19,0x16,0x13,0x0F,
-};
-
-static struct dsi_cmd_desc write_gamma23_cmds[] = {
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	 {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma23_Rp_setting), gamma23_Rp_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma23_Rn_setting), gamma23_Rn_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma23_Gp_setting), gamma23_Gp_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma23_Gn_setting), gamma23_Gn_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma23_Bp_setting), gamma23_Bp_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma23_Bn_setting), gamma23_Bn_setting},
-	
-};
-
-static char enable_orise_mode15[] = {
-	0x00,
-	0xC1,
-};
-
-
-static char enable_orise_mode16[] = {
-	0x00,
-	0x00,
-};
-
-static char enable_orise_mode17[] = {
-	0x00,
-	0x04,
-};
-
-static struct dsi_cmd_desc read_IC_version_cmds1[] = {
-       {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode1), enable_orise_mode1},	
-	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode2), enable_orise_mode2},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode3), enable_orise_mode3},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode16), enable_orise_mode16},	
-};
-
-static struct dsi_cmd_desc set_scan_mode[]= {
-    {DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-        sizeof(orise_shift_0xb4), orise_shift_0xb4},
-    {DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-        sizeof(display_address), display_address},
-};
-
-static struct dsi_cmd_desc read_IC_version_cmds2[] = {
-	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode17), enable_orise_mode17},	
 };
 
 static char ce_init_param1[] = {
@@ -785,38 +414,21 @@ static char ce_init_param8[] = {
 };
 
 
-static struct dsi_cmd_desc jdi_backlight_cmds[] = {
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
+static struct dsi_cmd_desc jdi_display_on_cmds[] = {
+	{DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
 		sizeof(bl_level), bl_level},
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
+	{DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
 		sizeof(bl_enable), bl_enable},
-};
-
-static struct dsi_cmd_desc jdi_video_on_v3_cmds[] = {
-	{DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
-		sizeof(bl_level), bl_level},
-
-	{DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
-		sizeof(bl_enable_noDimming), bl_enable_noDimming},
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(all_pixels_off), all_pixels_off},
-
 	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
 		sizeof(te_enable), te_enable},
-
-	{DTYPE_DCS_WRITE, 0, 10, WAIT_TYPE_MS,
-		sizeof(normal_display_on), normal_display_on},
-
-       {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode1), enable_orise_mode1},
-	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode2), enable_orise_mode2},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode3), enable_orise_mode3},
-
+		sizeof(enable_orise_command1), enable_orise_command1},
+	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
+		sizeof(orise_sheift_0x80), orise_sheift_0x80},
+	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
+		sizeof(enable_orise_command2), enable_orise_command2},
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-		sizeof(enable_orise_mode5), enable_orise_mode5},
+		sizeof(orise_shift_0x00), orise_shift_0x00},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
 		sizeof(ce_init_param1), ce_init_param1},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
@@ -826,7 +438,7 @@ static struct dsi_cmd_desc jdi_video_on_v3_cmds[] = {
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
 		sizeof(ce_init_param4), ce_init_param4},
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-		sizeof(enable_orise_mode5), enable_orise_mode5},
+		sizeof(orise_shift_0x00), orise_shift_0x00},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
 		sizeof(ce_init_param5), ce_init_param5},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
@@ -836,186 +448,33 @@ static struct dsi_cmd_desc jdi_video_on_v3_cmds[] = {
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
 		sizeof(ce_init_param8), ce_init_param8},
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-		sizeof(enable_orise_mode5), enable_orise_mode5},
+		sizeof(orise_shift_0x00), orise_shift_0x00},
 	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(CE_medium_on), CE_medium_on},
-
+		sizeof(ce_medium_on), ce_medium_on},
 	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode4), enable_orise_mode4},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(disable_per_charge), disable_per_charge},
-	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(set_vgl1), set_vgl1},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(set_vgl2), set_vgl2},
-
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(P_DRV_M1), P_DRV_M1},
-
-	{DTYPE_DCS_LWRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(P_DRV_M2), P_DRV_M2},
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(bl_PWM_CTRL1), bl_PWM_CTRL1},
-	{DTYPE_DCS_LWRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(bl_PWM_CTRL3), bl_PWM_CTRL3},
-
-	{DTYPE_DCS_WRITE, 0, 120, WAIT_TYPE_MS,
-		sizeof(exit_sleep), exit_sleep},
-
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},
-	 {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(GVDD_setting), GVDD_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	 {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma22_Rp_setting), gamma22_Rp_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma22_Rn_setting), gamma22_Rn_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma22_Gp_setting), gamma22_Gp_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma22_Gn_setting), gamma22_Gn_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma22_Bp_setting), gamma22_Bp_setting},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode14), enable_orise_mode14},		
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(gamma22_Bn_setting), gamma22_Bn_setting},		
-       {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(Delay_TE), Delay_TE},
-
-	{DTYPE_DCS_WRITE, 0, 10, WAIT_TYPE_MS,
-		sizeof(display_on), display_on},
-};
-
-static struct dsi_cmd_desc jdi_video_on_cmds[] = {
-	{DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
-		sizeof(bl_level), bl_level},
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(all_pixels_off), all_pixels_off},	
-
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(te_enable), te_enable},
-
-	{DTYPE_DCS_WRITE, 0, 10, WAIT_TYPE_MS,
-		sizeof(normal_display_on), normal_display_on},	
-
-       {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode1), enable_orise_mode1},	
-	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode2), enable_orise_mode2},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode3), enable_orise_mode3},
-	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-		sizeof(enable_orise_mode5), enable_orise_mode5},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param1), ce_init_param1},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param2), ce_init_param2},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param3), ce_init_param3},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param4), ce_init_param4},
-	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-		sizeof(enable_orise_mode5), enable_orise_mode5},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param5), ce_init_param5},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param6), ce_init_param6},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param7), ce_init_param7},
-	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(ce_init_param8), ce_init_param8},
-	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
-		sizeof(enable_orise_mode5), enable_orise_mode5},
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(CE_medium_on), CE_medium_on},
-	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
-		sizeof(enable_orise_mode4), enable_orise_mode4},
+		sizeof(orise_sheift_0x80), orise_sheift_0x80},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
 		sizeof(disable_per_charge), disable_per_charge},	
 	{DTYPE_GEN_WRITE2, 0, 200, WAIT_TYPE_US,
 		sizeof(set_vgl1), set_vgl1},
 	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
 		sizeof(set_vgl2), set_vgl2},
-
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(P_DRV_M1), P_DRV_M1},
-	{DTYPE_DCS_LWRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(P_DRV_M2), P_DRV_M2},
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(bl_PWM_CTRL1), bl_PWM_CTRL1},
-	{DTYPE_DCS_LWRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(bl_PWM_CTRL2), bl_PWM_CTRL2},
-
+	{DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
+		sizeof(Delay_TE), Delay_TE},
 	{DTYPE_DCS_WRITE, 0, 120, WAIT_TYPE_MS,
 		sizeof(exit_sleep), exit_sleep},
-
-#ifdef RGV_INV_ENABLE
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_ON1), Gen_write_RGB_INV_ON1},	
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_ON2), Gen_write_RGB_INV_ON2},		
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_ON3), Gen_write_RGB_INV_ON3},	
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(RGB_INV0), RGB_INV0},	
-		
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(RGB_INV1), RGB_INV1},	
-	
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_OFF1), Gen_write_RGB_INV_OFF1},
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_OFF2), Gen_write_RGB_INV_OFF2},	
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_OFF3), Gen_write_RGB_INV_OFF3},
-
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(Gen_write_RGB_INV_OFF4), Gen_write_RGB_INV_OFF4},	
-
-#endif
-       {DTYPE_GEN_LWRITE, 0, 200, WAIT_TYPE_US,
-		sizeof(Delay_TE), Delay_TE},
-	
 	{DTYPE_DCS_WRITE, 0, 10, WAIT_TYPE_MS,
 		sizeof(display_on), display_on},
-
-	{DTYPE_DCS_WRITE1, 0, 10, WAIT_TYPE_US,
-		sizeof(bl_enable_noDimming), bl_enable_noDimming},
-
 };
 
 static struct dsi_cmd_desc jdi_display_off_cmds[] = {
 	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(bl_level_0), bl_level_0},		
-	{DTYPE_DCS_WRITE, 0, 100, WAIT_TYPE_US,
-		sizeof(all_pixels_off), all_pixels_off},	
-	{DTYPE_DCS_WRITE, 0, 30, WAIT_TYPE_MS,
+		sizeof(bl_level), bl_level},
+	{DTYPE_DCS_WRITE, 0, 30, WAIT_TYPE_US,
 		sizeof(display_off), display_off},
-	{DTYPE_DCS_WRITE, 0, 80, WAIT_TYPE_MS,
-		sizeof(enter_sleep), enter_sleep}
-};
-
-static struct dsi_cmd_desc jdi_get_chip_id_cmds[] = {
 	{DTYPE_DCS_WRITE, 0, 120, WAIT_TYPE_MS,
-		sizeof(get_chip_id), get_chip_id}
+		sizeof(enter_sleep), enter_sleep},
 };
-
 
 static struct dsi_cmd_desc jdi_cabc_cmds[] = {
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
@@ -1059,6 +518,7 @@ static struct dsi_cmd_desc jdi_cabc_cmds[] = {
 	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
 		sizeof(CABC_disable_setting), CABC_disable_setting},		
 };
+
 static struct dsi_cmd_desc jdi_cabc_ui_on_cmds[] = {
 	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
 		sizeof(CABC_UI_MODE), CABC_UI_MODE},
@@ -1085,6 +545,8 @@ static struct dsi_cmd_desc jdi_cabc_vid_on_cmds[] = {
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
 		sizeof(CABC_VID_curve), CABC_VID_curve},		
 };
+
+/*
 static struct dsi_cmd_desc jdi_ce_cmds[] = {
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
 		sizeof(enable_orise_mode7), enable_orise_mode7},
@@ -1113,111 +575,247 @@ static struct dsi_cmd_desc jdi_ce_cmds[] = {
 	{DTYPE_GEN_WRITE2, 0, 100, WAIT_TYPE_US,
 		sizeof(enable_orise_mode5), enable_orise_mode5},
 };
+
 static struct dsi_cmd_desc jdi_ce_on_cmds[] = {
 	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
 		sizeof(CE_medium_on), CE_medium_on},	
 };
+*/
+/*******************************************************************************
+** LCD VCC
+*/
+#define VCC_LCDIO_NAME		"lcdio-vcc"
+#define VCC_LCDANALOG_NAME	"lcdanalog-vcc"
 
+static struct regulator *vcc_lcdio;
+static struct regulator *vcc_lcdanalog;
+
+static struct vcc_desc jdi_lcd_vcc_init_cmds[] = {
+	/* vcc get */
+	{DTYPE_VCC_GET, VCC_LCDIO_NAME, &vcc_lcdio, 0, 0},
+	{DTYPE_VCC_GET, VCC_LCDANALOG_NAME, &vcc_lcdanalog, 0, 0},
+
+	/* vcc set voltage */
+	{DTYPE_VCC_SET_VOLTAGE, VCC_LCDIO_NAME, &vcc_lcdio, 1800000, 1800000},
+};
+
+static struct vcc_desc jdi_lcd_vcc_finit_cmds[] = {
+	/* vcc put */
+	{DTYPE_VCC_PUT, VCC_LCDIO_NAME, &vcc_lcdio, 0, 0},
+	{DTYPE_VCC_PUT, VCC_LCDANALOG_NAME, &vcc_lcdanalog, 0, 0},
+};
+
+static struct vcc_desc jdi_lcd_vcc_enable_cmds[] = {
+	/* vcc enable */
+	{DTYPE_VCC_ENABLE, VCC_LCDIO_NAME, &vcc_lcdio, 0, 0},
+	{DTYPE_VCC_ENABLE, VCC_LCDANALOG_NAME, &vcc_lcdanalog, 0, 0},
+};
+
+static struct vcc_desc jdi_lcd_vcc_disable_cmds[] = {
+	/* vcc disable */
+	{DTYPE_VCC_DISABLE, VCC_LCDANALOG_NAME, &vcc_lcdanalog, 0, 0},
+	{DTYPE_VCC_DISABLE, VCC_LCDIO_NAME, &vcc_lcdio, 0, 0},
+};
+
+/*******************************************************************************
+** LCD IOMUX
+*/
+#define IOMUX_LCD_NAME	"block_lcd"
+
+static struct iomux_block **lcd_block;
+static struct block_config **lcd_block_config;
+
+static struct iomux_desc jdi_lcd_iomux_init_cmds[] = {
+	{DTYPE_IOMUX_GET, IOMUX_LCD_NAME,
+		(struct iomux_block **)&lcd_block, (struct block_config **)&lcd_block_config, 0},
+};
+
+static struct iomux_desc jdi_lcd_iomux_normal_cmds[] = {
+	{DTYPE_IOMUX_SET, IOMUX_LCD_NAME,
+		(struct iomux_block **)&lcd_block, (struct block_config **)&lcd_block_config, NORMAL},
+};
+
+static struct iomux_desc jdi_lcd_iomux_lowpower_cmds[] = {
+	{DTYPE_IOMUX_SET, IOMUX_LCD_NAME,
+		(struct iomux_block **)&lcd_block, (struct block_config **)&lcd_block_config, LOWPOWER},
+};
+
+/*******************************************************************************
+** LCD GPIO
+*/
+#define GPIO_LCD_POWER_NAME	"gpio_lcd_power"
+#define GPIO_LCD_RESET_NAME	"gpio_lcd_reset"
+
+#define GPIO_LCD_POWER	GPIO_21_3
+#define GPIO_LCD_RESET	GPIO_0_3
+
+static struct gpio_desc jdi_lcd_gpio_request_cmds[] = {
+	/* power */
+	{DTYPE_GPIO_REQUEST, WAIT_TYPE_MS, 0,
+		GPIO_LCD_POWER_NAME, GPIO_LCD_POWER, 0},
+	/* reset */
+	{DTYPE_GPIO_REQUEST, WAIT_TYPE_MS, 0,
+		GPIO_LCD_RESET_NAME, GPIO_LCD_RESET, 0},
+};
+
+static struct gpio_desc jdi_lcd_gpio_free_cmds[] = {
+	/* reset */
+	{DTYPE_GPIO_FREE, WAIT_TYPE_MS, 0,
+		GPIO_LCD_RESET_NAME, GPIO_LCD_RESET, 0},
+	/* power */
+	{DTYPE_GPIO_FREE, WAIT_TYPE_MS, 0,
+		GPIO_LCD_POWER_NAME, GPIO_LCD_POWER, 0},
+};
+
+static struct gpio_desc jdi_lcd_gpio_normal_cmds[] = {
+	/* reset */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 10,
+		GPIO_LCD_RESET_NAME, GPIO_LCD_RESET, 1},
+	/* power */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 10,
+		GPIO_LCD_POWER_NAME, GPIO_LCD_POWER, 1},
+    /* reset */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 10,
+		GPIO_LCD_RESET_NAME, GPIO_LCD_RESET, 0},
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 20,
+		GPIO_LCD_RESET_NAME, GPIO_LCD_RESET, 1},
+};
+
+static struct gpio_desc jdi_lcd_gpio_lowpower_cmds[] = {
+	/* power */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 1,
+		GPIO_LCD_POWER_NAME, GPIO_LCD_POWER, 0},
+	/* reset */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 1,
+		GPIO_LCD_RESET_NAME, GPIO_LCD_RESET, 0},
+};
+
+/*******************************************************************************
+** TP VCC
+*/
+#define VCC_TPVCI_NAME		"ts-vdd"
+#define VCC_TPVDDIO_NAME	"ts-vbus"
+
+static struct regulator *vcc_tpvci;
+static struct regulator *vcc_tpvddio;
+
+static struct vcc_desc jdi_tp_vcc_init_cmds[] = {
+	/* vcc get */
+	{DTYPE_VCC_GET, VCC_TPVCI_NAME, &vcc_tpvci, 0, 0},
+	{DTYPE_VCC_GET, VCC_TPVDDIO_NAME, &vcc_tpvddio, 0, 0},
+
+	/* vcc set voltage */
+	{DTYPE_VCC_SET_VOLTAGE, VCC_TPVCI_NAME, &vcc_tpvddio, 1800000, 1800000},
+};
+
+static struct vcc_desc jdi_tp_vcc_finit_cmds[] = {
+	/* vcc put */
+	{DTYPE_VCC_PUT, VCC_TPVCI_NAME, &vcc_tpvci, 0, 0},
+	{DTYPE_VCC_PUT, VCC_TPVDDIO_NAME, &vcc_tpvddio, 0, 0},
+};
+
+static struct vcc_desc jdi_tp_vcc_enable_cmds[] = {
+	/* vcc enable */
+	{DTYPE_VCC_ENABLE, VCC_TPVCI_NAME, &vcc_tpvci, 0, 0},
+	{DTYPE_VCC_ENABLE, VCC_TPVDDIO_NAME, &vcc_tpvddio, 0, 0},
+};
+
+static struct vcc_desc jdi_tp_vcc_disable_cmds[] = {
+	/* vcc disable */
+	{DTYPE_VCC_DISABLE, VCC_TPVDDIO_NAME, &vcc_tpvddio, 0, 0},
+	{DTYPE_VCC_DISABLE, VCC_TPVCI_NAME, &vcc_tpvci, 0, 0},
+};
+
+/*******************************************************************************
+** TP IOMUX
+*/
+#define IOMUX_TP_NAME	"block_touchscreen"
+
+static struct iomux_block **tp_block;
+static struct block_config **tp_block_config;
+
+static struct iomux_desc jdi_tp_iomux_init_cmds[] = {
+	{DTYPE_IOMUX_GET, IOMUX_TP_NAME,
+		(struct iomux_block **)&tp_block, (struct block_config **)&tp_block_config, 0},
+};
+
+static struct iomux_desc jdi_tp_iomux_normal_cmds[] = {
+	{DTYPE_IOMUX_SET, IOMUX_TP_NAME,
+		(struct iomux_block **)&tp_block, (struct block_config **)&tp_block_config, NORMAL},
+};
+
+static struct iomux_desc jdi_tp_iomux_lowpower_cmds[] = {
+	{DTYPE_IOMUX_SET, IOMUX_TP_NAME,
+		(struct iomux_block **)&tp_block, (struct block_config **)&tp_block_config, LOWPOWER},
+};
+
+/*******************************************************************************
+** TP GPIO
+*/
+#define GPIO_TP_RESET_NAME	"gpio_tp_reset"
+
+#define GPIO_TP_RESET	GPIO_19_4
+
+static struct gpio_desc jdi_tp_gpio_request_cmds[] = {
+	/* reset */
+	{DTYPE_GPIO_REQUEST, WAIT_TYPE_MS, 0,
+		GPIO_TP_RESET_NAME, GPIO_TP_RESET, 0},
+};
+
+static struct gpio_desc jdi_tp_gpio_free_cmds[] = {
+	/* reset */
+	{DTYPE_GPIO_FREE, WAIT_TYPE_MS, 0,
+		GPIO_TP_RESET_NAME, GPIO_TP_RESET, 0},
+};
+
+static struct gpio_desc jdi_tp_gpio_normal_cmds[] = {
+	/* reset */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 10,
+		GPIO_TP_RESET_NAME, GPIO_TP_RESET, 1},
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 10,
+		GPIO_TP_RESET_NAME, GPIO_TP_RESET, 0},
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 5,
+		GPIO_TP_RESET_NAME, GPIO_TP_RESET, 1},
+};
+
+static struct gpio_desc jdi_tp_gpio_lowpower_cmds[] = {
+	/* reset */
+	{DTYPE_GPIO_OUTPUT, WAIT_TYPE_MS, 1,
+		GPIO_TP_RESET_NAME, GPIO_TP_RESET, 0},
+};
+
+static volatile bool g_display_on;
 static struct k3_fb_panel_data jdi_panel_data;
+static volatile bool backlight_log_once;
 
-/******************************************************************************/
 
-/*y=pow(x,0.6),x=[0,255]*/
-static u32 square_point_six_1(u32 x)
+/*******************************************************************************
+**
+*/
+static struct lcd_tuning_dev *p_tuning_dev = NULL;
+static int cabc_mode = 1; /* allow application to set cabc mode to ui mode */
+
+/* y=pow(x,0.6),x=[0,255]
+static u32 square_point_six(u32 x)
 {
 	unsigned long t = x * x * x;
 	int i = 0, j = 255, k = 0;
 	unsigned long t0 = 0;
+
 	while (j - i > 1) {
 		k = (i + j) / 2;
-			t0 = k * k * k * k * k;
-		if(t0 < t)
+		t0 = k * k * k * k * k;
+		if (t0 < t)
 			i = k;
 		else if (t0 > t)
 			j = k;
 		else
 			return k;
 	}
+
 	return k;
 }
-
-static struct lcd_tuning_dev *p_tuning_dev = NULL;
-
-static ssize_t jdi_lcd_info_show(struct device *dev,
-	struct device_attribute *attr, char *buf)
-{
-	int ret = 0;
-	struct k3_panel_info *pinfo = NULL;
-
-	pinfo = jdi_panel_data.panel_info;
-
-	sprintf(buf, "Chimei 6.0' HD TFT %d x %d\n",
-		pinfo->xres, pinfo->yres);
-
-	ret = strlen(buf) + 1;
-
-	return ret;
-}
-
-static DEVICE_ATTR(lcd_info, S_IRUGO, jdi_lcd_info_show, NULL);
-
-extern bool sbl_low_power_mode;
-
-static ssize_t sbl_low_power_mode_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
-{
-	int ret = 0;
-	if(sbl_low_power_mode)
-	{
-		sprintf(buf, "sbl low power mode is enable.\n");
-	}
-	else
-	{
-		sprintf(buf, "sbl low power mode is disable.\n");
-	}
-	ret = strlen(buf) + 1;
-	return ret;
-}
-
-static ssize_t sbl_low_power_mode_store(struct device *dev,
-			     struct device_attribute *devattr,
-			     const char *buf, size_t count)
-{
-	struct k3_panel_info *pinfo;
-	long m_sbl_low_power_mode = simple_strtol(buf, NULL, 10) != 0;
-	sbl_low_power_mode =(bool)m_sbl_low_power_mode;
-	return count;
-}
-
-static DEVICE_ATTR(sbl_low_power_mode, 0664,
-	sbl_low_power_mode_show, sbl_low_power_mode_store);
-
-static struct attribute *jdi_attrs[] = {
-	&dev_attr_lcd_info,
-	&dev_attr_sbl_low_power_mode,
-	NULL,
-};
-
-static struct attribute_group jdi_attr_group = {
-	.attrs = jdi_attrs,
-};
-
-static int jdi_sysfs_init(struct platform_device *pdev)
-{
-	int ret;
-	ret = sysfs_create_group(&pdev->dev.kobj, &jdi_attr_group);
-	if (ret) {
-		k3fb_loge("create sysfs file failed!\n");
-		return ret;
-	}
-	return 0;
-}
-
-static void jdi_sysfs_deinit(struct platform_device *pdev)
-{
-	sysfs_remove_group(&pdev->dev.kobj, &jdi_attr_group);
-}
-
+*/
 static int jdi_set_gamma(struct lcd_tuning_dev *ltd, enum lcd_gamma gamma)
 {
 	int ret = 0;
@@ -1231,7 +829,6 @@ static int jdi_set_gamma(struct lcd_tuning_dev *ltd, enum lcd_gamma gamma)
 	BUG_ON(k3fd == NULL);
 
 	edc_base = k3fd->edc_base;
-
 
 	return ret;
 }
@@ -1249,7 +846,8 @@ static int jdi_set_cabc(struct lcd_tuning_dev *ltd, enum  tft_cabc cabc)
 	BUG_ON(k3fd == NULL);
 
 	edc_base = k3fd->edc_base;
-	/*switch (cabc) 
+
+	switch (cabc) 
 	{
 		case CABC_UI:
 			
@@ -1265,7 +863,7 @@ static int jdi_set_cabc(struct lcd_tuning_dev *ltd, enum  tft_cabc cabc)
 			break;
 		default:
 			ret = -1;
-	}*/
+	}
 
 	return ret;
 }
@@ -1273,6 +871,7 @@ static int jdi_set_cabc(struct lcd_tuning_dev *ltd, enum  tft_cabc cabc)
 static unsigned int g_csc_value[9];
 static unsigned int g_is_csc_set;
 static struct semaphore ct_sem;
+unsigned int lcd_product_id = 0xff;
 
 static void jdi_store_ct_cscValue(unsigned int csc_value[])
 {
@@ -1294,13 +893,11 @@ static void jdi_store_ct_cscValue(unsigned int csc_value[])
 
 static int jdi_set_ct_cscValue(struct k3_fb_data_type *k3fd)
 {
-     u32 edc_base = 0;
+    u32 edc_base = 0;
     edc_base = k3fd->edc_base;
     down(&ct_sem);
-    if(1 == g_is_csc_set)
-    {
+    if (1 == g_is_csc_set) {
         set_reg(edc_base + 0x400, 0x1, 1, 27);
-
         set_reg(edc_base + 0x408, g_csc_value[0], 13, 0);
         set_reg(edc_base + 0x408, g_csc_value[1], 13, 16);
         set_reg(edc_base + 0x40C, g_csc_value[2], 13, 0);
@@ -1313,8 +910,7 @@ static int jdi_set_ct_cscValue(struct k3_fb_data_type *k3fd)
     }
     up(&ct_sem);
 
-
-     return 0;
+    return 0;
 }
 
 static int jdi_set_color_temperature(struct lcd_tuning_dev *ltd, unsigned int csc_value[])
@@ -1323,15 +919,13 @@ static int jdi_set_color_temperature(struct lcd_tuning_dev *ltd, unsigned int cs
     struct platform_device *pdev;
     struct k3_fb_data_type *k3fd;
 
-    if (ltd == NULL)
-    {
+    if (ltd == NULL) {
         return -1;
     }
-    pdev  = (struct platform_device *)(ltd->data);
+    pdev = (struct platform_device *)(ltd->data);
     k3fd = (struct k3_fb_data_type *)platform_get_drvdata(pdev);
 
-    if (k3fd == NULL)
-    {
+    if (k3fd == NULL) {
         return -1;
     }
 
@@ -1346,219 +940,207 @@ static struct lcd_tuning_ops sp_tuning_ops = {
 	.set_color_temperature = jdi_set_color_temperature,
 };
 
-
-/*******************************************************************************/
-
-static int jdi_pwm_on(struct k3_fb_data_type *k3fd)
+static ssize_t jdi_lcd_info_show(struct device *dev,
+	struct device_attribute *attr, char *buf)
 {
-	BUG_ON(k3fd == NULL);
+	int ret = 0;
+	struct k3_panel_info *pinfo = NULL;
 
-	/* backlight on */
-	PWM_IOMUX_SET(&(k3fd->panel_info), NORMAL);
-	PWM_GPIO_REQUEST(&(k3fd->panel_info));
-	gpio_direction_input(k3fd->panel_info.gpio_pwm1);
-	mdelay(1);
-	pwm_set_backlight(k3fd->bl_level, &(k3fd->panel_info));
+	pinfo = jdi_panel_data.panel_info;
+	sprintf(buf, "Chimei 6.0' HD TFT %d x %d\n",
+		pinfo->xres, pinfo->yres);
+	ret = strlen(buf) + 1;
+
+	return ret;
+}
+
+static ssize_t show_cabc_mode(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	return sprintf(buf, "%d\n", cabc_mode);
+}
+
+static ssize_t store_cabc_mode(struct device *dev,
+	struct device_attribute *attr, char *buf)
+{
+	int ret = 0;
+	unsigned long val = 0;
+
+	ret = strict_strtoul(buf, 0, &val);
+	if (ret)
+		return ret;
+
+	if(val == 1) {
+		/* allow application to set cabc mode to ui mode */
+		cabc_mode = 1;
+		jdi_set_cabc(p_tuning_dev, CABC_UI);
+	} else if (val == 2) {
+		/* force cabc mode to video mode */
+		cabc_mode = 2;
+		jdi_set_cabc(p_tuning_dev, CABC_VID);
+	}
+
+	return sprintf(buf, "%d\n", cabc_mode);
+}
+
+static DEVICE_ATTR(lcd_info, S_IRUGO, jdi_lcd_info_show, NULL);
+static DEVICE_ATTR(cabc_mode, 0644, show_cabc_mode, store_cabc_mode);
+
+static struct attribute *jdi_attrs[] = {
+	&dev_attr_lcd_info,
+	&dev_attr_cabc_mode,
+	NULL,
+};
+
+static struct attribute_group jdi_attr_group = {
+	.attrs = jdi_attrs,
+};
+
+static int jdi_sysfs_init(struct platform_device *pdev)
+{
+	int ret = 0;
+
+	ret = sysfs_create_group(&pdev->dev.kobj, &jdi_attr_group);
+	if (ret) {
+		k3fb_loge("create sysfs file failed!\n");
+		return ret;
+	}
 
 	return 0;
 }
 
-static int jdi_pwm_off(struct k3_fb_data_type *k3fd)
+static void jdi_sysfs_deinit(struct platform_device *pdev)
 {
-	BUG_ON(k3fd == NULL);
-
-	pwm_set_backlight(0, &(k3fd->panel_info));
-	gpio_direction_output(k3fd->panel_info.gpio_pwm0, 0);
-	mdelay(1);
-	gpio_direction_input(k3fd->panel_info.gpio_pwm1);
-	mdelay(1);
-	PWM_GPIO_FREE(&(k3fd->panel_info));
-	PWM_IOMUX_SET(&(k3fd->panel_info), LOWPOWER);
-
-	return 0;
+	sysfs_remove_group(&pdev->dev.kobj, &jdi_attr_group);
 }
 
+
+/*******************************************************************************
+**
+*/
 static void jdi_disp_on(struct k3_fb_data_type *k3fd)
 {
 	u32 edc_base = 0;
 	struct k3_panel_info *pinfo = NULL;
-	int read_loop, cnt = 0;
-    u32 scan_mode, temp =99;
-
 	BUG_ON(k3fd == NULL);
 	edc_base = k3fd->edc_base;
 	pinfo = &(k3fd->panel_info);
+	jdi_set_ct_cscValue(k3fd);
 
-    jdi_set_ct_cscValue(k3fd);
+	/* tp iomux normal */
+	iomux_cmds_tx(jdi_tp_iomux_normal_cmds, \
+		ARRAY_SIZE(jdi_tp_iomux_normal_cmds));
 
-	LCD_IOMUX_SET(pinfo, NORMAL);
-	LCD_GPIO_REQUEST(pinfo);
+	/* tp gpio request */
+	gpio_cmds_tx(jdi_tp_gpio_request_cmds, \
+		ARRAY_SIZE(jdi_tp_gpio_request_cmds));
 
-	if (gpio_request(GPIO_5_3, "bl_ctrl") != 0)
-		k3fb_loge("failed to request gpio bl_ctrl!\n");
-	if (gpio_direction_output(GPIO_5_3, 1) != 0)
-		k3fb_loge("failed to request gpio bl_ctrl!\n");
-        mdelay(10);
+	/* tp gpio normal */
+	gpio_cmds_tx(jdi_tp_gpio_normal_cmds, \
+		ARRAY_SIZE(jdi_tp_gpio_normal_cmds));
 
-    if(1 == get_mate_new_lcd_type())
-    {
-//		gpio_direction_output(pinfo->gpio_power, 1);
-//		mdelay(40);
-		gpio_direction_output(pinfo->gpio_reset, 1);
-		mdelay(10);
-		gpio_direction_output(pinfo->gpio_power, 1);
-		mdelay(10);
-		gpio_direction_output(pinfo->gpio_reset, 0);
-		mdelay(10);
-		gpio_direction_output(pinfo->gpio_reset, 1);	
-		mdelay(20);
-		gpio_direction_output(pinfo->gpio_reset, 0);
-		mdelay(5);
-		gpio_direction_output(pinfo->gpio_reset, 1);
-		mdelay(20);
+	/* lcd iomux normal */
+	iomux_cmds_tx(jdi_lcd_iomux_normal_cmds, \
+		ARRAY_SIZE(jdi_lcd_iomux_normal_cmds));
 
-		mipi_dsi_cmds_tx(read_IC_version_cmds1, \
-			ARRAY_SIZE(read_IC_version_cmds1), edc_base);
+	/* lcd gpio request */
+	gpio_cmds_tx(jdi_lcd_gpio_request_cmds, \
+		ARRAY_SIZE(jdi_lcd_gpio_request_cmds));
 
-		outp32(edc_base+ MIPIDSI_GEN_HDR_OFFSET, (0xd1) << 8 | 0x14);
-		mdelay(1);
-		temp = inp32(edc_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
-        printk("ID2 =%d\n",temp);
+	/* lcd gpio normal */
+	gpio_cmds_tx(jdi_lcd_gpio_normal_cmds, \
+		ARRAY_SIZE(jdi_lcd_gpio_normal_cmds));
 
-        if(temp == 0x00)
-		{
-			mipi_dsi_cmds_tx(read_IC_version_cmds2, \
-				ARRAY_SIZE(read_IC_version_cmds2), edc_base);
+	/* lcd display on sequence */
+	mipi_dsi_cmds_tx(jdi_display_on_cmds, \
+		ARRAY_SIZE(jdi_display_on_cmds), edc_base);
 
-			outp32(edc_base+ MIPIDSI_GEN_HDR_OFFSET, (0xf8) << 8 | 0x14);
-			mdelay(1);
+	 /*enable TP's irq which was disabled in jdi_disp_off.*/
+	enable_irq(gpio_to_irq(GPIO_19_5));
 
-			temp = inp32(edc_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
-            printk("ic =%d\n",temp);
-            if(temp == 0x01)
-            {
-                mipi_dsi_cmds_tx(write_gamma23_cmds, \
-                    ARRAY_SIZE(write_gamma23_cmds), edc_base);
-            }
+	/* Enable CABC */
+	mipi_dsi_cmds_tx(jdi_cabc_cmds, \
+		ARRAY_SIZE(jdi_cabc_cmds), edc_base);
+	mipi_dsi_cmds_tx(jdi_cabc_ui_on_cmds, \
+		ARRAY_SIZE(jdi_cabc_ui_on_cmds), edc_base);
+/*
+	mipi_dsi_cmds_tx(jdi_ce_cmds, \
+		ARRAY_SIZE(jdi_ce_cmds), edc_base);
 
-		}
-        
-		mipi_dsi_cmds_tx(jdi_video_on_cmds, \
-			ARRAY_SIZE(jdi_video_on_cmds), edc_base);
+	mipi_dsi_cmds_tx(jdi_ce_on_cmds, \
+		ARRAY_SIZE(jdi_ce_on_cmds), edc_base);
 
-        for (read_loop = 0; read_loop < 3; read_loop++) {
-            outp32(edc_base+ MIPIDSI_GEN_HDR_OFFSET, 0xb40023);
-            udelay(200);
-            outp32(edc_base+ MIPIDSI_GEN_HDR_OFFSET, (0xc0) << 8 | 0x06);
-            udelay(200);
-            scan_mode = inp32(edc_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
-            udelay(200);
-            printk("\n\n-----scan_mode =0x%2x-----\n\n",scan_mode);
-            if (scan_mode == 0x10)
-                break;
-
-            mipi_dsi_cmds_tx(set_scan_mode, \
-                ARRAY_SIZE(set_scan_mode), edc_base);
-        }
-		if (read_loop >= 3)
-			outp32(edc_base+ MIPIDSI_GEN_HDR_OFFSET, 0x005315);
-    }
-    else
-    {
-    	while ( cnt <2 )
-    	{
-    		gpio_direction_output(pinfo->gpio_power, 0);
-    		mdelay(3);
-    		gpio_direction_output(pinfo->gpio_power, 1);
-    		mdelay(120);
-    		gpio_direction_output(pinfo->gpio_reset, 1);
-    		mdelay(3);
-    		gpio_direction_output(pinfo->gpio_reset, 0);
-    		mdelay(3);
-    		gpio_direction_output(pinfo->gpio_reset, 1);
-    		mdelay(50);
-
-            mipi_dsi_cmds_tx(jdi_video_on_v3_cmds, \
-                ARRAY_SIZE(jdi_video_on_v3_cmds), edc_base);
-    		
-    		cnt++;
-    	}
-    }
-
-
-
-/*	mipi_dsi_cmds_tx(jdi_cabc_cmds, \
-		ARRAY_SIZE(jdi_cabc_cmds), edc_base);*/
-
-	printk("\ndisplay on\n\n");
+	mipi_dsi_cmds_tx(jdi_vdd_cmds, \
+		ARRAY_SIZE(jdi_vdd_cmds), edc_base);
+*/
+    printk("---display on\n");
 }
 
 static void jdi_disp_off(struct k3_fb_data_type *k3fd)
 {
 	u32 edc_base = 0;
+	int retval = 0;
 	struct k3_panel_info *pinfo = NULL;
 
 	BUG_ON(k3fd == NULL);
 	edc_base = k3fd->edc_base;
 	pinfo = &(k3fd->panel_info);
 
+	/* lcd display off sequence */
 	mipi_dsi_cmds_tx(jdi_display_off_cmds,
 		ARRAY_SIZE(jdi_display_off_cmds), edc_base);
-
-	gpio_direction_output(pinfo->gpio_power, 0);
-	mdelay(1);
-	gpio_direction_output(pinfo->gpio_reset, 0);
-	mdelay(1);
-
-	if (gpio_direction_output(GPIO_5_3, 0) != 0)
-		k3fb_loge("failed to request gpio bl_ctrl!\n");
-    mdelay(1);
-
-    if (gpio_is_valid(GPIO_5_3)) {
-		gpio_free(GPIO_5_3);
-	}
-
 /*
-   GPIO_19_5 is TP's interrupt GPIO, It is upload by ldo14 which will be closed here, 
-so this irq should be disabled at first and then enable it in mipi_jdi_panel_on.  */
-        #ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-        if(1==g_k3fb_in_suspend)
-        {
-            disable_irq(gpio_to_irq(GPIO_19_5));
-        }
-        #endif
+	if(rmi_fc != NULL){
 
-	LCD_GPIO_FREE(pinfo);
-	LCD_IOMUX_SET(pinfo, LOWPOWER);
+		retval = rmi_f01_glove_switch_read(rmi_fc);
+		if (retval < 0)
+			dev_err(&rmi_fc->dev,
+				"Failed to switch mode between finger and glove. Code: %d.\n",
+				retval);
+	}*/
+	/*
+	GPIO_19_5 is TP's interrupt GPIO, It is upload by ldo14 which will be closed here,
+	so this irq should be disabled at first and then enable it in mipi_jdi_panel_on.
+	*/
 
-	LCDIO_SET_VOLTAGE(pinfo, 0, 1800000);
-	LCD_VCC_DISABLE(pinfo);
+	disable_irq(gpio_to_irq(GPIO_19_5));
 
-	/*add begin: just for the case that LCD&TP share the ldo*/
-        #ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-        if(1==g_k3fb_in_suspend)
-        {
-            mdelay(1);
-            TP_set_iomux_lowpower();
-            //TK_set_iomux_lowpower();
-            if (true == jdi_tk_enable){
-            TK_VCI_DISABLE();
-            }
-            TP_VCI_DISABLE();
-            TP_set_gpio_config_lowpower();
-            g_k3fb_in_suspend = 0;
-        }
-        #endif
-	/*add end: just for the case that LCD&TP share the ldo*/
+	/* lcd gpio request */
+	gpio_cmds_tx(jdi_lcd_gpio_lowpower_cmds, \
+		ARRAY_SIZE(jdi_lcd_gpio_lowpower_cmds));
 
-	printk("\ndisplay off\n\n");
+	/* lcd gpio free */
+	gpio_cmds_tx(jdi_lcd_gpio_free_cmds, \
+		ARRAY_SIZE(jdi_lcd_gpio_free_cmds));
 
-    
+	/* lcd iomux lowpower */
+	iomux_cmds_tx(jdi_lcd_iomux_lowpower_cmds, \
+		ARRAY_SIZE(jdi_lcd_iomux_lowpower_cmds));
+
+	/* tp gpio request */
+	printk("%s	enter:tp gpio request, free and iomux lowpower\n",__func__);
+	gpio_cmds_tx(jdi_tp_gpio_lowpower_cmds, \
+		ARRAY_SIZE(jdi_tp_gpio_lowpower_cmds));
+
+	/* tp gpio free */
+	gpio_cmds_tx(jdi_tp_gpio_free_cmds, \
+		ARRAY_SIZE(jdi_tp_gpio_free_cmds));
+
+	/* tp iomux lowpower */
+	iomux_cmds_tx(jdi_tp_iomux_lowpower_cmds, \
+		ARRAY_SIZE(jdi_tp_iomux_lowpower_cmds));
+
+	/* lcd vcc disable */
+	vcc_cmds_tx(NULL, jdi_lcd_vcc_disable_cmds, \
+		ARRAY_SIZE(jdi_lcd_vcc_disable_cmds));
+
+	/* tp vcc disable */
+	vcc_cmds_tx(NULL, jdi_tp_vcc_disable_cmds, \
+		ARRAY_SIZE(jdi_tp_vcc_disable_cmds));
+
 }
 
 static int skip_esd_once = true;
-static int backlight_log_once = true;
-
 static int mipi_jdi_panel_on(struct platform_device *pdev)
 {
 	struct k3_fb_data_type *k3fd = NULL;
@@ -1571,55 +1153,28 @@ static int mipi_jdi_panel_on(struct platform_device *pdev)
 
 	pinfo = &(k3fd->panel_info);
 	if (pinfo->lcd_init_step == LCD_INIT_POWER_ON) {
+		/* tp vcc enable */
+		vcc_cmds_tx(NULL, jdi_tp_vcc_enable_cmds, \
+			ARRAY_SIZE(jdi_tp_vcc_enable_cmds));
 
-		/*add begin: just for the case that LCD&TP share the ldo*/
-		#ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-		if(1==g_k3fb_in_resume)
-		{
-		    TP_set_iomux_normal();
-		    //TK_set_iomux_normal();
+		/* lcd vcc enable */
+		vcc_cmds_tx(NULL, jdi_lcd_vcc_enable_cmds, \
+			ARRAY_SIZE(jdi_lcd_vcc_enable_cmds));
 
-		    TP_VCI_ENABLE();
-
-		    if (true == jdi_tk_enable){
-			    TK_VCI_ENABLE();
-		    }
-
-		    msleep(5);
+		pinfo->lcd_init_step = LCD_INIT_MIPI_LP_SEND_SEQUENCE;
+	} else if (pinfo->lcd_init_step == LCD_INIT_MIPI_LP_SEND_SEQUENCE) {
+		if (!g_display_on) {
+			/* lcd display on */
+			jdi_disp_on(k3fd);
+			skip_esd_once = true;
 		}
-		#endif
-		/*add end: just for the case that LCD&TP share the ldo*/
-		LCDIO_SET_VOLTAGE(pinfo, 1800000, 1800000);
-		LCD_VCC_ENABLE(pinfo);
-		pinfo->lcd_init_step = LCD_INIT_SEND_SEQUENCE;
+		pinfo->lcd_init_step = LCD_INIT_MIPI_HS_SEND_SEQUENCE;
+	} else if (pinfo->lcd_init_step == LCD_INIT_MIPI_HS_SEND_SEQUENCE) {
 
-		/*add begin: just for the case that LCD&TP share the ldo*/
-		#ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-		if(1==g_k3fb_in_resume)
-		{
-        	    msleep(5);
-        	    TP_set_gpio_config_normal();
-        	    msleep(5);
-        	    /*enable TP's irq which was disabled in jdi_disp_off.*/
-        	    enable_irq(gpio_to_irq(GPIO_19_5));
-
-        	    g_k3fb_in_resume = 0;
-		}
-		#endif
-		/*add end: just for the case that LCD&TP share the ldo*/
-		return 0;
-	}
-
-	if (!k3fd->panel_info.display_on) {
-		/* lcd display on */
-		jdi_disp_on(k3fd);
-        skip_esd_once = true;
+        g_display_on = true;
         backlight_log_once = true;
-		k3fd->panel_info.display_on = true;
-		if (k3fd->panel_info.bl_set_type & BL_SET_BY_PWM) {
-			/* backlight on */
-			jdi_pwm_on(k3fd);
-		}
+	} else {
+		k3fb_loge("failed to init lcd!\n");
 	}
 
 	return 0;
@@ -1634,15 +1189,11 @@ static int mipi_jdi_panel_off(struct platform_device *pdev)
 	k3fd = (struct k3_fb_data_type *)platform_get_drvdata(pdev);
 	BUG_ON(k3fd == NULL);
 
-	if (k3fd->panel_info.display_on) {
-		k3fd->panel_info.display_on = false;
-		if (k3fd->panel_info.bl_set_type & BL_SET_BY_PWM) {
-			/* backlight off */
-			jdi_pwm_off(k3fd);
-		}
+	if (g_display_on) {
+		g_display_on = false;
 		/* lcd display off */
 		jdi_disp_off(k3fd);
-        skip_esd_once = false;
+		skip_esd_once = false;
 	}
 
 	return 0;
@@ -1660,21 +1211,15 @@ static int mipi_jdi_panel_remove(struct platform_device *pdev)
 		return 0;
 	}
 
-	if (k3fd->panel_info.bl_set_type & BL_SET_BY_PWM) {
-		PWM_CLK_PUT(&(k3fd->panel_info));
-	}
-	LCD_VCC_PUT(&(k3fd->panel_info));
+	/* lcd vcc finit */
+	vcc_cmds_tx(pdev, jdi_lcd_vcc_finit_cmds, \
+		ARRAY_SIZE(jdi_lcd_vcc_finit_cmds));
 
-	/*add begin: just for the case that LCD&TP share the ldo*/
-        #ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-        TP_VCI_PUT();
-	if (true == jdi_tk_enable){
-		TK_VCI_PUT();
-	}
-        #endif
-	/*add end: just for the case that LCD&TP share the ldo*/
-    
-    jdi_sysfs_deinit(pdev);
+	/* tp vcc finit */
+	vcc_cmds_tx(pdev, jdi_tp_vcc_finit_cmds, \
+		ARRAY_SIZE(jdi_tp_vcc_finit_cmds));
+
+	jdi_sysfs_deinit(pdev);
 
 	return 0;
 }
@@ -1690,9 +1235,9 @@ static int mipi_jdi_panel_set_backlight(struct platform_device *pdev)
 		0x00,
 	};
 
-       struct dsi_cmd_desc  jdi_bl_level_adjust[] = {
-	{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
-		sizeof(bl_level_adjust), bl_level_adjust},		
+	struct dsi_cmd_desc  jdi_bl_level_adjust[] = {
+		{DTYPE_DCS_WRITE1, 0, 100, WAIT_TYPE_US,
+			sizeof(bl_level_adjust), bl_level_adjust},		
 	};
 
 	BUG_ON(pdev == NULL);
@@ -1704,11 +1249,8 @@ static int mipi_jdi_panel_set_backlight(struct platform_device *pdev)
 	So we adjust the brightness of lcd following iphone4 */
     level = k3fd->bl_level;
 
-    if (level > 248)
-    {
-        level = 248;
-    }
-
+	if (level > 248)
+		level = 248;
 
     //backlight may turn off when bl_level is below 6.
     if (level < 6 && level != 0)
@@ -1716,26 +1258,24 @@ static int mipi_jdi_panel_set_backlight(struct platform_device *pdev)
         level = 6;
     }
 
+//#ifdef CONFIG_MATE_USE_TI_BACKLIGHT_IC
     if (level >= 28 && level <= 34)
     {
         level = 35;
     }
+//#endif
 
 	bl_level_adjust[1] = level;
 
     if (backlight_log_once) {
         backlight_log_once = false;
-        k3fb_loge("----k3fd->bl_level=%d,set backlight to level = %d\n",k3fd->bl_level, level);
+        printk("%s: set backlight to %d\n", __func__, level);
     }
-
 	mipi_dsi_cmds_tx(jdi_bl_level_adjust, \
 		ARRAY_SIZE(jdi_bl_level_adjust), edc_base);
 
-       return 0;
-	
+	return 0;
 }
-
-
 
 static int mipi_jdi_panel_set_fastboot(struct platform_device *pdev)
 {
@@ -1746,19 +1286,31 @@ static int mipi_jdi_panel_set_fastboot(struct platform_device *pdev)
 	k3fd = (struct k3_fb_data_type *)platform_get_drvdata(pdev);
 	BUG_ON(k3fd == NULL);
 
-	LCD_VCC_ENABLE(&(k3fd->panel_info));
-	LCD_IOMUX_SET(&(k3fd->panel_info), NORMAL);
-	LCD_GPIO_REQUEST(&(k3fd->panel_info));
+	/* tp vcc enable */
+	vcc_cmds_tx(pdev, jdi_tp_vcc_enable_cmds, \
+		ARRAY_SIZE(jdi_tp_vcc_enable_cmds));
 
-	if (gpio_request(GPIO_5_3, "bl_ctrl") != 0)
-		k3fb_loge("failed to request gpio bl_ctrl!\n");
+	/* tp iomux normal */
+	iomux_cmds_tx(jdi_tp_iomux_normal_cmds, \
+		ARRAY_SIZE(jdi_lcd_iomux_normal_cmds));
 
-	if (k3fd->panel_info.bl_set_type & BL_SET_BY_PWM) {
-		PWM_IOMUX_SET(&(k3fd->panel_info), NORMAL);
-		PWM_GPIO_REQUEST(&(k3fd->panel_info));
-	}
+	/* tp gpio request */
+	gpio_cmds_tx(jdi_tp_gpio_request_cmds, \
+		ARRAY_SIZE(jdi_tp_gpio_request_cmds));
 
-	k3fd->panel_info.display_on = true;
+	/* lcd vcc enable */
+	vcc_cmds_tx(pdev, jdi_lcd_vcc_enable_cmds, \
+		ARRAY_SIZE(jdi_lcd_vcc_enable_cmds));
+
+	/* lcd iomux normal */
+	iomux_cmds_tx(jdi_lcd_iomux_normal_cmds, \
+		ARRAY_SIZE(jdi_lcd_iomux_normal_cmds));
+
+	/* lcd gpio request */
+	gpio_cmds_tx(jdi_lcd_gpio_request_cmds, \
+		ARRAY_SIZE(jdi_lcd_gpio_request_cmds));
+
+	g_display_on = true;
 
 	return 0;
 }
@@ -1792,7 +1344,6 @@ static int mipi_jdi_panel_check_esd(struct platform_device *pdev)
 	k3fd = (struct k3_fb_data_type *)platform_get_drvdata(pdev);
 	BUG_ON(k3fd == NULL);
 
-	/* read pwm */
     if (skip_esd_once) {
         skip_esd_once = false;
         outp32(k3fd->edc_base + MIPIDSI_GEN_HDR_OFFSET, 0xAC << 8 | 0x06);
@@ -1800,8 +1351,10 @@ static int mipi_jdi_panel_check_esd(struct platform_device *pdev)
         return 0;
     }
 
-    outp32(k3fd->edc_base + MIPIDSI_GEN_HDR_OFFSET, 0xAC << 8 | 0x06);
-	return  inp32(k3fd->edc_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
+	/* read pwm */
+	outp32(k3fd->edc_base + MIPIDSI_GEN_HDR_OFFSET, 0xAC << 8 | 0x06);
+
+	return inp32(k3fd->edc_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
 }
 
 static struct k3_panel_info jdi_panel_info = {0};
@@ -1819,30 +1372,30 @@ static struct k3_fb_panel_data jdi_panel_data = {
 static int __devinit jdi_probe(struct platform_device *pdev)
 {
 	struct k3_panel_info *pinfo = NULL;
-	struct resource *res = NULL;
-	struct platform_device *reg_pdev;
-	struct lcd_tuning_dev *ltd;
+	struct platform_device *reg_pdev = NULL;
 	struct lcd_properities lcd_props;
+    struct k3_fb_data_type *k3fd = NULL;
+
+	g_display_on = false;
 
 	pinfo = jdi_panel_data.panel_info;
 	/* init lcd panel info */
-	pinfo->display_on = false;
 	pinfo->xres = 720;
 	pinfo->yres = 1280;
-        pinfo->width =58;
-        pinfo->height =103;
+	pinfo->width = 75;
+	pinfo->height = 135;
 	pinfo->type = PANEL_MIPI_CMD;
 	pinfo->orientation = LCD_PORTRAIT;
 	pinfo->bpp = EDC_OUT_RGB_888;
 	pinfo->s3d_frm = EDC_FRM_FMT_2D;
 	pinfo->bgr_fmt = EDC_RGB;
 	pinfo->bl_set_type = BL_SET_BY_MIPI;
-	pinfo->bl_max = PWM_LEVEL;
 	pinfo->bl_min = 1;
+	pinfo->bl_max = 100;
 
 	pinfo->frc_enable = 1;
 	pinfo->esd_enable = 1;
-    pinfo->sbl_enable = 1;
+	pinfo->sbl_enable = 1;
 	pinfo->sbl.bl_max = 0xff;
 	pinfo->sbl.cal_a = 0x08;
 	pinfo->sbl.cal_b = 0xd8;
@@ -1871,41 +1424,21 @@ static int __devinit jdi_probe(struct platform_device *pdev)
 	pinfo->mipi.vc = 0;
 	pinfo->mipi.dsi_bit_clk = 241;
 
-	/*add begin: just for the case that LCD&TP share the ldo*/
-        #ifdef CONFIG_P2_TP_TK_CMD_FEATURE
-        TP_VCI_GET(pdev);
-        //TP_VDDIO_GET(pdev);
-        TP_VCI_ENABLE();
+	/* tp vcc init */
+	vcc_cmds_tx(pdev, jdi_tp_vcc_init_cmds, \
+		ARRAY_SIZE(jdi_tp_vcc_init_cmds));
 
-	jdi_tk_enable = get_jdi_tk_enable();
-	if (true == jdi_tk_enable){
-		TK_VCI_GET(pdev);
-		TK_VCI_ENABLE();
-	}
-        msleep(5);
-        //TP_VDDIO_ENABLE();
-        TP_set_iomux_init();
-        //TK_set_iomux_init();
-        TP_set_iomux_normal();
-        //TK_set_iomux_normal();
-        #endif
-	/*add end: just for the case that LCD&TP share the ldo*/
+	/* lcd vcc init */
+	vcc_cmds_tx(pdev, jdi_lcd_vcc_init_cmds, \
+		ARRAY_SIZE(jdi_lcd_vcc_init_cmds));
 
-	/* lcd vcc */
-	LCD_VCC_GET(pdev, pinfo);
-	LCDIO_SET_VOLTAGE(pinfo, 1800000, 1800000);
-	/* lcd iomux */
-	LCD_IOMUX_GET(pinfo);
-	/* lcd resource */
-	LCD_RESOURCE(pdev, pinfo, res);
-	if (pinfo->bl_set_type & BL_SET_BY_PWM) {
-		/* pwm clock*/
-		PWM_CLK_GET(pinfo);
-		/* pwm iomux */
-		PWM_IOMUX_GET(pinfo);
-		/* pwm resource */
-		PWM_RESOUTCE(pdev, pinfo, res);
-	}
+	/* tp iomux init */
+	iomux_cmds_tx(jdi_tp_iomux_init_cmds, \
+		ARRAY_SIZE(jdi_tp_iomux_init_cmds));
+
+	/* lcd iomux init */
+	iomux_cmds_tx(jdi_lcd_iomux_init_cmds, \
+		ARRAY_SIZE(jdi_lcd_iomux_init_cmds));
 
 	/* alloc panel device data */
 	if (platform_device_add_data(pdev, &jdi_panel_data,
@@ -1916,28 +1449,37 @@ static int __devinit jdi_probe(struct platform_device *pdev)
 	}
 
 	reg_pdev = k3_fb_add_device(pdev);
+    k3fd = (struct k3_fb_data_type *)platform_get_drvdata(reg_pdev);
+    BUG_ON(k3fd == NULL);
 
-        sema_init(&ct_sem, 1);
-        g_csc_value[0] = 0;
-        g_csc_value[1] = 0;
-        g_csc_value[2] = 0;
-        g_csc_value[3] = 0;
-        g_csc_value[4] = 0;
-        g_csc_value[5] = 0;
-        g_csc_value[6] = 0;
-        g_csc_value[7] = 0;
-        g_csc_value[8] = 0;
-        g_is_csc_set = 0;
+    /* read product id */
+    outp32(k3fd->edc_base + MIPIDSI_GEN_HDR_OFFSET, 0xDA << 8 | 0x06);
+    udelay(150);
+    lcd_product_id = inp32(k3fd->edc_base + MIPIDSI_GEN_PLD_DATA_OFFSET);
+    printk("lcd product id is 0x%x\n", lcd_product_id);
+
+	sema_init(&ct_sem, 1);
+	g_csc_value[0] = 0;
+	g_csc_value[1] = 0;
+	g_csc_value[2] = 0;
+	g_csc_value[3] = 0;
+	g_csc_value[4] = 0;
+	g_csc_value[5] = 0;
+	g_csc_value[6] = 0;
+	g_csc_value[7] = 0;
+	g_csc_value[8] = 0;
+	g_is_csc_set = 0;
 	/* for cabc */
 	lcd_props.type = TFT;
 	lcd_props.default_gamma = GAMMA25;
-	ltd = lcd_tuning_dev_register(&lcd_props, &sp_tuning_ops, (void *)reg_pdev);
-	p_tuning_dev=ltd;
-	if (IS_ERR(ltd)) {
+	p_tuning_dev = lcd_tuning_dev_register(&lcd_props, &sp_tuning_ops, (void *)reg_pdev);
+	if (IS_ERR(p_tuning_dev)) {
 		k3fb_loge("lcd_tuning_dev_register failed!\n");
 		return -1;
 	}
-    jdi_sysfs_init(pdev);
+
+	jdi_sysfs_init(pdev);
+
 	return 0;
 }
 

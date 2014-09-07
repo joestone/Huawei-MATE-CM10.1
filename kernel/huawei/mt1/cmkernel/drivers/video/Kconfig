@@ -2478,6 +2478,13 @@ config LCD_JDI_OTM1282B
 	  JDI 720p LCD support on K3 platform. If you are using U9700,
 	  please choose it.
 
+config LCD_CMI_OTM1282B
+	tristate "CMI_OTM1282B 720p LCD support on K3 platform"
+	depends on FB_K3_CLCD
+	help
+	  CMI 720p LCD support on K3 platform. If you are using U9900,
+	  please choose it.
+
 config P2_TP_TK_CMD_FEATURE
 	tristate "P2 TP TK support"
         depends on FB_K3_CLCD

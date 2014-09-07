@@ -686,6 +686,8 @@ static int __init rmidev_module_init(void)
 	return 0;
 }
 
+
+
 static void __exit rmidev_module_exit(void)
 {
 	init_completion(&remove_complete);
